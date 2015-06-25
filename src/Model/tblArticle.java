@@ -9,5 +9,6 @@ public class tblArticle {
 		return allArticles;
 	}
 	public static void main(String args[]){
+		System.out.println("asdf");
 	}
 }
