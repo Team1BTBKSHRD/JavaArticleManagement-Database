@@ -3,9 +3,9 @@ package Model;
 import java.sql.*;
 import java.util.ArrayList;
 
-public class tblArticle {
-	public ArrayList<Article> all() throws ClassNotFoundException{
-		ArrayList<Article> allArticles = new ArrayList<Article>();
+public class ArticleDAO {
+	public ArrayList<ArticleDTO> all() throws ClassNotFoundException{
+		ArrayList<ArticleDTO> allArticles = new ArrayList<ArticleDTO>();
 		
 		Class.forName("org.postgresql.Driver");
 		Connection con=null;
@@ -16,7 +16,7 @@ public class tblArticle {
 
 		ResultSet rs=stm.executeQuery();
 		while(rs.next()){
-			System.out.println(rs.getString(1));
+			//System.out.println(rs.getString(1));
 		}
 			
 		}catch(Exception e){
