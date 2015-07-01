@@ -211,8 +211,6 @@ public class ArticleView {
 	public void process() {
 		repaginate();
 		drawTable(subPages);
-		String option = getStringKeyboard("Please, input your option here--> ");
-		
 	}
 
 	/*
@@ -532,8 +530,6 @@ public class ArticleView {
 																				 */
 		System.out.println();
 		// Menu bar;
-		
-		
 		menu(maxColumns, totalLenght); /* Output Menu Bar */
 	}
 
