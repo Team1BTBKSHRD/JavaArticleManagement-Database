@@ -13,10 +13,11 @@ public class DatabaseConnection {
     private static final String PASSWORD = "password";
     private static final String DRIVER_NAME = "com.mysql.jdbc.Driver";
     private static final String PORT_NUMBER = "5432";
+    private DatabaseConnection(){}
 	/*
 	 * getConnection() function return connection *
 	 */
-	public Connection getConnection() throws SQLException,
+	public static Connection getConnection() throws SQLException,
 			ClassNotFoundException {
 
 		Class.forName("org.postgresql.Driver");
@@ -31,7 +32,7 @@ public class DatabaseConnection {
 	 * 
 	 * @param : databasename, username, password return connection
 	 */
-	public Connection getConnection(String databasename, String username,
+	public static Connection getConnection(String databasename, String username,
 			String password) throws SQLException, ClassNotFoundException {
 		
 		Class.forName("org.postgresql.Driver");
@@ -41,16 +42,19 @@ public class DatabaseConnection {
 		return conn;
 	}
 	
-	public String createDatabase() throws ClassNotFoundException, SQLException{		
+	public static String createDatabase() throws ClassNotFoundException, SQLException{		
 		Class.forName("org.postgresql.Driver");
 		Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/","postgres","123");
-		PreparedStatement stm = con.prepareStatement("SELECT datname FROM pg_database WHERE datname='dbArtcle';");
+		PreparedStatement stm = con.prepareStatement("SELECT datname FROM pg_database WHERE datname='dbarticle';");
 		ResultSet rs=stm.executeQuery();
-		while(rs.next()){
-			System.out.println(rs.getString(1));
+		if(!rs.next()){	
+			String sqlScript = "CREATE DATABASE dbarticle   WITH OWNER postgres    TEMPLATE template0   "
+							+ "ENCODING 'SQL_ASCII'   TABLESPACE  pg_default   LC_COLLATE  'C'   "
+							+ "LC_CTYPE  'C'   CONNECTION LIMIT  -1;";
+			stm = con.prepareStatement(sqlScript);			
+			stm.executeUpdate();
+			return "Created New Database.";
 		}
-		
-		//stm.executeUpdate("CREATE DATABASE MydatAbseName   WITH OWNER postgres    TEMPLATE template0   ENCODING 'SQL_ASCII'   TABLESPACE  pg_default   LC_COLLATE  'C'   LC_CTYPE  'C'   CONNECTION LIMIT  -1;");
-		return null;
+		return "Database Already Existed.";		
 	}
 }
