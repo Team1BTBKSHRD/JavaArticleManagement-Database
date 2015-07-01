@@ -11,7 +11,7 @@ Target Server Type    : PGSQL
 Target Server Version : 90303
 File Encoding         : 65001
 
-Date: 2015-07-01 16:59:57
+Date: 2015-07-01 17:13:50
 */
 
 
@@ -239,6 +239,20 @@ END
 
 $BODY$
   LANGUAGE 'plpgsql' VOLATILE COST 100
+;
+
+-- ----------------------------
+-- Function structure for next_page
+-- ----------------------------
+CREATE OR REPLACE FUNCTION "next_page"(r int4, o int4)
+  RETURNS SETOF "public"."tbarticle" AS $BODY$
+
+SELECT * FROM tbarticle LIMIT r OFFSET o;
+-- RETURN $add;
+
+$BODY$
+  LANGUAGE 'sql' VOLATILE COST 100
+ ROWS 1000
 ;
 
 -- ----------------------------
