@@ -1,5 +1,8 @@
 package Model;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.*;
 
 /*
@@ -7,78 +10,93 @@ import java.sql.*;
  * -- Database Connection
  * */
 public class DatabaseConnection {
+    private static final String DRIVER_NAME = "org.postgresql.Driver";
     private static final String URL = "jdbc:postgresql://localhost:";
-    private static final String DB_NAME = "dbArtcle";
-    private static final String USER = "postgres";
-    private static final String PASSWORD = "password";
-    private static final String DRIVER_NAME = "com.mysql.jdbc.Driver";
     private static final String PORT_NUMBER = "5432";
+    private static final String DB_NAME = "dbarticle";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "123";
+	/**
+	 * Deny object initialization
+	 */
     private DatabaseConnection(){}
-	/*
-	 * getConnection() function return connection *
+	/**
+	 * connecting to a database
+	 * @return object connection to a database
+	 * @throws SQLException
+	 * @throws ClassNotFoundException
 	 */
-	public static Connection getConnection() throws SQLException,
-			ClassNotFoundException {
-
-		Class.forName("org.postgresql.Driver");
+    public static Connection getConnection() throws 
+    		SQLException, ClassNotFoundException {
+		Class.forName(DRIVER_NAME);
 		Connection conn = DriverManager.getConnection(
-				"jdbc:postgresql://localhost:5432/dbarticle", "postgres", "123");
+				URL + PORT_NUMBER + "/" + DB_NAME, USER, PASSWORD);
 		return conn;
-
-	}
-
-	/*
-	 * getConnection(1,2,3) function with param
-	 * 
-	 * @param : databasename, username, password return connection
+	}	
+	/**
+	 * check whether if database is exist or create a new one
+	 * @return string message
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 * @throws IOException
 	 */
-	public static Connection getConnection(String databasename, String username,
-			String password) throws SQLException, ClassNotFoundException {
+	public static String checkDatabase() throws 
+			ClassNotFoundException, SQLException, IOException{		
+		//DO NOT USE getConnection() in this function
+		//there will be error when there is no database
+		Connection con = DriverManager.getConnection(URL + PORT_NUMBER + "/", USER, PASSWORD);
+		PreparedStatement stm = con.prepareStatement("SELECT datname FROM pg_database WHERE datname='"+ DB_NAME +"';");
+		ResultSet rs = stm.executeQuery();
 		
-		Class.forName("org.postgresql.Driver");
-		Connection conn = DriverManager.getConnection(
-				"jdbc:postgresql://localhost:5432/" + databasename, username,
-				password);
-		return conn;
-	}
-	
-	public static String createDatabase() throws ClassNotFoundException, SQLException{		
-		Class.forName("org.postgresql.Driver");
-		Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/","postgres","123");
-		PreparedStatement stm = con.prepareStatement("SELECT datname FROM pg_database WHERE datname='dbarticle';");
-		ResultSet rs=stm.executeQuery();
+		//if rs.next is true => database is already exist
+		//false => there is no databse => create new database, functions, views
 		if(!rs.next()){	
-			String sqlScript = "CREATE DATABASE dbarticle   WITH OWNER postgres    TEMPLATE template0   "
+			//creating new database
+			String sqlScript = "CREATE DATABASE " + DB_NAME + "   WITH OWNER " + USER + "    TEMPLATE template0   "
 							+ "ENCODING 'SQL_ASCII'   TABLESPACE  pg_default   LC_COLLATE  'C'   "
-							+ "LC_CTYPE  'C'   CONNECTION LIMIT  -1;";
-			stm = con.prepareStatement(sqlScript);			
+							+ "LC_CTYPE  'C'   CONNECTION LIMIT  -1;";			
+			stm = con.prepareStatement(sqlScript);
 			stm.executeUpdate();
-		
+			rs.close();
 			stm.close();
 			con.close();
 			
-			createDatabaseDefinition();
+			//creating functions and views
+			executeSqlStatementFromFile("runscript.sql");
 			
 			return "Created New Database.";
 		}
+		rs.close();
 		stm.close();
 		con.close();
-
 		return "Database Already Existed.";		
-	}
-	public static String createDatabaseDefinition() throws ClassNotFoundException, SQLException{		
-		Class.forName("org.postgresql.Driver");
+	}	
+	/**
+	 * execute SQL statement from SQL file
+	 * if error occur it throws exception so there's no need to return anything 
+	 * @param fileName: SQL file name 
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 * @throws IOException
+	 */
+	public static void executeSqlStatementFromFile(String fileName) throws 
+			ClassNotFoundException, SQLException, IOException{		
+		//Read Sql Statement from sql file		
+		BufferedReader br = new BufferedReader(new FileReader(fileName));
+		StringBuilder sqlScript = new StringBuilder();
+		String str1 = "";
+		while ((str1 = br.readLine()) != null) {
+			sqlScript.append(str1);
+			sqlScript.append("\n");
+		}
+		br.close();
+		
+		//then execute it
+		//if error occur it throws exception so there's no need to return anything
 		Connection con = getConnection();
-		String sqlScript = "CREATE SEQUENCE  \"art_id_seq\" INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 2 CACHE 1;"
-							+ "SELECT setval(' \"art_id_seq\"', 2, true);"
-							+ "CREATE TABLE  \"tbarticle\" (\"id\" int4 DEFAULT nextval('art_id_seq'::regclass) NOT NULL,\"author\" text COLLATE \"default\" NOT NULL,\"title\" text COLLATE \"default\" NOT NULL,\"content\" text COLLATE \"default\",\"published_date\" timestamp(6))WITH (OIDS=FALSE);"
-							+ "INSERT INTO  \"tbarticle\" VALUES ('1', 'sambo', 'java', 'kfjalj', '2015-07-01 10:35:40');"
-							+ "INSERT INTO  \"tbarticle\" VALUES ('2', 'ellit', 'web', 'kdfjd', '2015-07-01 10:35:55');";
-		PreparedStatement stm = con.prepareStatement(sqlScript);
+		PreparedStatement stm = con.prepareStatement(sqlScript.toString());
 		stm.execute();
 		stm.close();
-		con.close();
-
-		return "Database Already Existed.";		
+		con.close();				
 	}
 }

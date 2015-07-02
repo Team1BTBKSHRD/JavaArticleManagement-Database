@@ -11,14 +11,13 @@ Target Server Type    : PGSQL
 Target Server Version : 90303
 File Encoding         : 65001
 
-Date: 2015-07-01 17:13:50
+Date: 2015-07-02 14:01:55
 */
 
 
 -- ----------------------------
 -- Sequence structure for art_id_seq
 -- ----------------------------
-DROP SEQUENCE "art_id_seq";
 CREATE SEQUENCE "art_id_seq"
  INCREMENT 1
  MINVALUE 1
@@ -54,58 +53,6 @@ INSERT INTO "tbarticle" VALUES ('6', 'sf', 'sok', 'sokdfadf', '2015-07-01 14:11:
 INSERT INTO "tbarticle" VALUES ('7', 'sf', 'sok', '', '2015-07-01 14:13:07.393+07');
 INSERT INTO "tbarticle" VALUES ('8', '', 'sok', '', '2015-07-01 14:13:17.646+07');
 COMMIT;
-
--- ----------------------------
--- Table structure for tbl_student
--- ----------------------------
-DROP TABLE IF EXISTS "tbl_student";
-CREATE TABLE "tbl_student" (
-"id" int4 NOT NULL,
-"st_name" text COLLATE "default",
-"gender" char(1) COLLATE "default"
-)
-WITH (OIDS=FALSE)
-
-;
-
--- ----------------------------
--- Records of tbl_student
--- ----------------------------
-BEGIN;
-INSERT INTO "tbl_student" VALUES ('2', 'pov', 'f');
-INSERT INTO "tbl_student" VALUES ('5', 'fdg', 'm');
-COMMIT;
-
--- ----------------------------
--- Table structure for tbstudent
--- ----------------------------
-DROP TABLE IF EXISTS "tbstudent";
-CREATE TABLE "tbstudent" (
-"id" int4,
-"name" text COLLATE "default",
-"gender" char(1) COLLATE "default"
-)
-WITH (OIDS=FALSE)
-
-;
-
--- ----------------------------
--- Records of tbstudent
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- View structure for vw_search_by_id
--- ----------------------------
-CREATE OR REPLACE VIEW "vw_search_by_id" AS 
- SELECT tbarticle.id,
-    tbarticle.author,
-    tbarticle.title,
-    tbarticle.content,
-    tbarticle.published_date
-   FROM tbarticle
-  WHERE (tbarticle.id = set_id(3));
 
 -- ----------------------------
 -- View structure for vw_short_by_author_asc
@@ -260,12 +207,12 @@ $BODY$
 -- ----------------------------
 CREATE OR REPLACE FUNCTION "search_by_author"(au text)
   RETURNS SETOF "public"."tbarticle" AS $BODY$ SELECT
-	*
+  *
 FROM
-	tbarticle
+  tbarticle
 WHERE
-	author = au ; -- RETURN $add;
-	$BODY$
+  author = au ; -- RETURN $add;
+  $BODY$
   LANGUAGE 'sql' VOLATILE COST 100
  ROWS 1000
 ;
@@ -313,17 +260,6 @@ $BODY$
 ;
 
 -- ----------------------------
--- Function structure for set_id
--- ----------------------------
-CREATE OR REPLACE FUNCTION "set_id"(i int4)
-  RETURNS "pg_catalog"."int4" AS $BODY$
-BEGIN
-	RETURN i ;
-END ; $BODY$
-  LANGUAGE 'plpgsql' VOLATILE COST 100
-;
-
--- ----------------------------
 -- Function structure for set_row
 -- ----------------------------
 CREATE OR REPLACE FUNCTION "set_row"(r int4)
@@ -344,8 +280,8 @@ CREATE OR REPLACE FUNCTION "total_record()"()
   RETURNS "pg_catalog"."int4" AS $BODY$
 DECLARE total INTEGER;
 BEGIN
-	SELECT count(*) INTO total FROM tbarticle;
-	RETURN total;
+  SELECT count(*) INTO total FROM tbarticle;
+  RETURN total;
 END;
 $BODY$
   LANGUAGE 'plpgsql' VOLATILE COST 100
@@ -411,8 +347,3 @@ $BODY$
 -- Primary Key structure for table tbarticle
 -- ----------------------------
 ALTER TABLE "tbarticle" ADD PRIMARY KEY ("id");
-
--- ----------------------------
--- Primary Key structure for table tbl_student
--- ----------------------------
-ALTER TABLE "tbl_student" ADD PRIMARY KEY ("id");
