@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import Controller.ArticleController;
 import Model.ArticleDTO;
 
 public class ArticleView {
@@ -30,6 +31,9 @@ public class ArticleView {
 	ArrayList<ArticleDTO> articles;
 	List<ArticleDTO> subPages; /* Use for store a set of articles for view */
 
+	private ArticleController articleController=new ArticleController();
+	
+	
 	private int currentPage; /* Current page position */
 	private int pageSize; /* Number of records for view */
 	private int totalPage; /* Store All Total Pages */
@@ -211,6 +215,9 @@ public class ArticleView {
 	public void process() {
 		repaginate();
 		drawTable(subPages);
+		System.out.println("--------->Input Operation : ");
+		articleController.controllerAction(getStringKeyboard(""));
+		System.out.println(articleController.getMessage());
 	}
 
 	/*
@@ -532,13 +539,20 @@ public class ArticleView {
 		// Menu bar;
 		menu(maxColumns, totalLenght); /* Output Menu Bar */
 	}
-
+	/*
+	 * viewOneRecord
+	 * */
+	public int viewOneRecord(){
+		System.out.println("Please input id : ");
+		return getNumberKeyboard("");
+	}
 	public void viewDetail(ArticleDTO article) {
 		System.out.println("ID: " + article.getId());
 		System.out.println("Author: " + article.getAuthor());
 		System.out.println("Title: " + article.getTitle());
-		System.out.println("Publish Date: " + article.getPublishDate());
 		System.out.println("Content: " + article.getContent());
+		System.out.println("Publish Date: " + article.getPublishDate());
+		
 	}
 
 	public ArrayList<ArticleDTO> add() {
@@ -603,7 +617,7 @@ public class ArticleView {
 	private int getNumberKeyboard(String message) {
 		Scanner put = new Scanner(System.in);
 		while (true) {
-			System.out.print(message);
+			//System.out.print(message);
 			try {
 				return put.nextInt();
 			} catch (java.util.InputMismatchException e) {
@@ -649,7 +663,7 @@ public class ArticleView {
 				break;
 			}// End of switch;
 			System.out.println("Update Completed!");
-			waiting();
+			//waiting();
 			return new ArticleDTO(id, author, title, content, null);
 		} catch (Exception e) {
 			// logfile.writeLogException(e, "update", "Management");
@@ -664,16 +678,16 @@ public class ArticleView {
 		String key = getStringKeyboard("Please, input key for search: ");
 		switch (searchBy.toLowerCase()) {
 		case "i": // search ID
-			searchOption = "ID;" + key;
+			searchOption = "id;" + key;
 			break;
 		case "au": // search Author name
-			searchOption = "Author;" + key;
+			searchOption = "author;" + key;
 			break;
 		case "p": // search PublishDate
-			searchOption = "PublishDate;" + key;
+			searchOption = "published_date;" + key;
 			break;
 		case "t": // search Title
-			searchOption = "Title;" + key;
+			searchOption = "title;" + key;
 			break;
 		default:
 			System.out.println("No Option. Please Input Again.");
@@ -688,27 +702,27 @@ public class ArticleView {
 		String sortOption;
 		switch (sortBy.toLowerCase()) {
 		case "i": // sort ID
-			sortOption = "ID;";
+			sortOption = "id;";
 			break;
 		case "au": // sort Author name
-			sortOption = "Author;";
+			sortOption = "author;";
 			break;
 		case "p": // sort PublishDate
-			sortOption = "PublishDate";
+			sortOption = "published_date";
 			break;
 		case "t": // sort Title
-			sortOption = "Title;";
+			sortOption = "title;";
 			break;
 		default:
 			System.out.println("No Option. Please Input Again.");
 			waiting();
 			return null;
 		}
-		String orderBy = getStringKeyboard("Order By: ASC or DSC --> ");
+		String orderBy = getStringKeyboard("Order By: ASC or DESC --> ");
 		if (orderBy.equalsIgnoreCase("asc"))
 			sortOption += "ASC";
 		else
-			sortOption += "DSC";
+			sortOption += "DESC";
 		return sortOption;
 	}
 

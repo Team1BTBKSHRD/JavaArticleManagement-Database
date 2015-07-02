@@ -8,6 +8,10 @@ import Utilities.DatabaseConnection;
 public class ArticleDAO {
 	private String message = null;
 
+	public String getMessage() {
+		return message;
+	}
+
 	public boolean insertRecords(ArrayList<ArticleDTO> arraylist) {
 		String data = "{call add_article(?,?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
@@ -129,7 +133,6 @@ public class ArticleDAO {
 							.getString("content"), rs.getDate("published_date")
 							.toString()));
 				}
-
 				break;
 			case "title":
 				String title = "{call search_by_title(?)}";
@@ -158,17 +161,16 @@ public class ArticleDAO {
 
 				break;
 			case "id":
-				String id = "{call search_by_id(?)}";
+				String id = "{call search_id(?)}";
 				cstm = DatabaseConnection.getConnection().prepareCall(id);
 				cstm.setInt(1, Integer.parseInt(fields));
 				rs = cstm.executeQuery();
-				while (rs.next()) {
+				if (rs.next()) {
 					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 							.getString("author"), rs.getString("title"), rs
 							.getString("content"), rs.getDate("published_date")
 							.toString()));
 				}
-
 				break;
 			}
 
@@ -183,16 +185,17 @@ public class ArticleDAO {
 				message = e.getMessage();
 			}
 		}
-
+		System.out.println(articlelsit.size());
 		if (articlelsit.size() > 0) {
 			message = "true";
 		} else {
 			message = "false";
 		}
+
 		return articlelsit;
 	}
 
-	public ArrayList<ArticleDTO> listData(){
+	public ArrayList<ArticleDTO> listDb() {
 		ArrayList<ArticleDTO> articlelsit = new ArrayList<ArticleDTO>();
 		String data = "{call vw_show_by_id}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
@@ -202,12 +205,120 @@ public class ArticleDAO {
 						.getString("author"), rs.getString("title"), rs
 						.getString("content"), rs.getString("published_date")));
 			}
-		}catch (Exception e) {
-			message=e.getMessage();
+		} catch (Exception e) {
+			message = e.getMessage();
 		}
 		return articlelsit;
 	}
 
-	//public ArrayList<ArticleDTO> setRow(int row){return }
-	//public int returnCountRow(){return}
+	public ArrayList<ArticleDTO> listSort(String fields, String orders) {
+		ArrayList<ArticleDTO> artilcelist = new ArrayList<ArticleDTO>();
+		CallableStatement cstm = null;
+		ResultSet rs = null;
+		String query = "";
+		try {
+			switch (fields) {
+			case "id":
+				if (orders.equals("desc")) {
+					query = "{call vw_show_by_id_dsc}";
+					cstm = DatabaseConnection.getConnection()
+							.prepareCall(query);
+					rs=cstm.executeQuery();
+					while(rs.next()){
+						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+								.getString("author"), rs.getString("title"), rs
+								.getString("content"), rs.getString("published_date")));
+					}
+				}else{
+					query = "{call vw_show_by_id}";
+					cstm = DatabaseConnection.getConnection()
+							.prepareCall(query);
+					rs=cstm.executeQuery();
+					while(rs.next()){
+						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+								.getString("author"), rs.getString("title"), rs
+								.getString("content"), rs.getString("published_date")));
+					}
+				}
+				break;
+			case "author":
+				if (orders.equals("desc")) {
+					query = "{call vw_short_by_author_desc}";
+					cstm = DatabaseConnection.getConnection()
+							.prepareCall(query);
+					rs=cstm.executeQuery();
+					while(rs.next()){
+						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+								.getString("author"), rs.getString("title"), rs
+								.getString("content"), rs.getString("published_date")));
+					}
+				}else{
+					query = "{call vw_short_by_author_asc}";
+					cstm = DatabaseConnection.getConnection()
+							.prepareCall(query);
+					rs=cstm.executeQuery();
+					while(rs.next()){
+						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+								.getString("author"), rs.getString("title"), rs
+								.getString("content"), rs.getString("published_date")));
+					}
+				}
+				break;
+			case "title":
+				if (orders.equals("desc")) {
+					query = "{call vw_short_by_title_desc}";
+					cstm = DatabaseConnection.getConnection()
+							.prepareCall(query);
+					rs=cstm.executeQuery();
+					while(rs.next()){
+						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+								.getString("author"), rs.getString("title"), rs
+								.getString("content"), rs.getString("published_date")));
+					}
+				}else{
+					query = "{call vw_short_by_title_asc}";
+					cstm = DatabaseConnection.getConnection()
+							.prepareCall(query);
+					rs=cstm.executeQuery();
+					while(rs.next()){
+						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+								.getString("author"), rs.getString("title"), rs
+								.getString("content"), rs.getString("published_date")));
+					}
+				}
+				break;
+			case "content":
+				if (orders.equals("desc")) {
+					query = "{call vw_short_by_content_desc}";
+					cstm = DatabaseConnection.getConnection()
+							.prepareCall(query);
+					rs=cstm.executeQuery();
+					while(rs.next()){
+						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+								.getString("author"), rs.getString("title"), rs
+								.getString("content"), rs.getString("published_date")));
+					}
+				}else{
+					query = "{call vw_short_by_content_asc}";
+					cstm = DatabaseConnection.getConnection()
+							.prepareCall(query);
+					rs=cstm.executeQuery();
+					while(rs.next()){
+						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+								.getString("author"), rs.getString("title"), rs
+								.getString("content"), rs.getString("published_date")));
+					}
+				}
+				break;
+
+			}
+		} catch (Exception e) {
+			message=e.getMessage();
+		}
+
+		return artilcelist;
+	}
+	// public ArrayList<ArticleDTO> setRow(int row){return }
+	// public int returnCountRow(){return}
+
 }
