@@ -6,156 +6,208 @@ import java.util.ArrayList;
 import Utilities.DatabaseConnection;
 
 public class ArticleDAO {
-	public static boolean insertDB(ArrayList<ArticleDTO> arraylist) {
-		try {
-			PreparedStatement pstm = DatabaseConnection
-					.getConnection()
-					.prepareStatement(
-							"insert into tbarticle(author,title,content) values(?,?,?)");
+	private String message = null;
+
+	public boolean insertRecords(ArrayList<ArticleDTO> arraylist) {
+		String data = "{call add_article(?,?,?)}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data);) {
 			for (ArticleDTO articleDTO : arraylist) {
-				pstm.setString(1, articleDTO.getAuthor());
-				pstm.setString(1, articleDTO.getTitle());
-				pstm.setString(1, articleDTO.getContent());
-				pstm.execute();
+				cstm.setString(1, articleDTO.getAuthor());
+				cstm.setString(2, articleDTO.getTitle());
+				cstm.setString(3, articleDTO.getContent());
+				cstm.execute();
 			}
-			pstm.close();
 			return true;
 		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();// write to error log
+			message = e.getMessage();
 		}
 
 		return false;
 	}
 
 	public boolean removeRecord(int key) {
-		try {
-			PreparedStatement pstm = DatabaseConnection.getConnection()
-					.prepareStatement("delete * from tbarticle where id=?");
-			pstm.setInt(1, key);
-			if (pstm.executeUpdate() > 0) {
-				return true;
-			}
-			pstm.close();
+		String data = "{call delete_article(?)}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data);) {
+			cstm.setInt(1, key);
+			ResultSet rs = cstm.executeQuery();
+			rs.next();
+			return rs.getBoolean(1);
 		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
+			message = e.getMessage();
 		}
 		return false;
 	}
 
 	public boolean updateRecordAuthor(int key, String author) {
-		try {
-			PreparedStatement pstm = DatabaseConnection.getConnection()
-					.prepareStatement(
-							"update tbarticle set author=? where id=?");
-			pstm.setString(1, author);
-			pstm.setInt(2, key);
-			if (pstm.executeUpdate() > 0) {
+		String data = "{call update_article_author(?,?)}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data);) {
+			cstm.setInt(1, key);
+			cstm.setString(2, author);
+			if (cstm.executeUpdate() > 0) {
+
 				return true;
+
 			}
-			pstm.close();
 		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
+			message = e.getMessage();
 		}
+
 		return false;
 	}
 
 	public boolean updateRecordTitle(int key, String title) {
-		try {
-			PreparedStatement pstm = DatabaseConnection.getConnection()
-					.prepareStatement(
-							"update tbarticle set author=? where id=?");
-			pstm.setString(1, title);
-			pstm.setInt(2, key);
-			if (pstm.executeUpdate() > 0) {
+		String data = "{call update_article_title(?,?)}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data);) {
+			cstm.setInt(1, key);
+			cstm.setString(2, title);
+			if (cstm.executeUpdate() > 0) {
+
 				return true;
+
 			}
-			pstm.close();
 		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
+			message = e.getMessage();
 		}
 
 		return false;
 	}
 
 	public boolean updateRecordContent(int key, String content) {
-		try {
-			PreparedStatement pstm = DatabaseConnection.getConnection()
-					.prepareStatement(
-							"update tbarticle set author=? where id=?");
-			pstm.setString(1, content);
-			pstm.setInt(2, key);
-			if (pstm.executeUpdate() > 0) {
+		String data = "{call update_article_content(?,?)}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data);) {
+			cstm.setInt(1, key);
+			cstm.setString(2, content);
+			if (cstm.executeUpdate() > 0) {
+
 				return true;
+
 			}
-			pstm.close();
 		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
+			message = e.getMessage();
+		}
+
+		return false;
+	}
+
+	public boolean updateRecordAll(int key, String author, String title,
+			String content) {
+		String data = "{call update_article(?,?,?,?)}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data);) {
+			cstm.setInt(1, key);
+			cstm.setString(2, author);
+			cstm.setString(3, title);
+			cstm.setString(4, content);
+			ResultSet rs = cstm.executeQuery();
+			rs.next();
+			return rs.getBoolean(1);
+		} catch (Exception e) {
+			message = e.getMessage();
 		}
 		return false;
 	}
 
-	public boolean updateRecordAll(int key, ArticleDTO article) {
+	public ArrayList<ArticleDTO> searchRecord(String operation, String fields) {
+		ArrayList<ArticleDTO> articlelsit = new ArrayList<ArticleDTO>();
+		CallableStatement cstm = null;
+		ResultSet rs = null;
 		try {
-			PreparedStatement pstm = DatabaseConnection
-					.getConnection()
-					.prepareStatement(
-							"update tbarticle set author=?,title=?,content=? where id=?");
-			pstm.setString(1, article.getAuthor());
-			pstm.setString(2, article.getTitle());
-			pstm.setString(3, article.getContent());
-			pstm.setInt(4, key);
-			if (pstm.executeUpdate() > 0) {
-				return true;
+			switch (operation) {
+			case "author":
+				String author = "{call search_by_author(?)}";
+				cstm = DatabaseConnection.getConnection().prepareCall(author);
+				cstm.setString(1, fields);
+				rs = cstm.executeQuery();
+				while (rs.next()) {
+					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+							.getString("author"), rs.getString("title"), rs
+							.getString("content"), rs.getDate("published_date")
+							.toString()));
+				}
+
+				break;
+			case "title":
+				String title = "{call search_by_title(?)}";
+				cstm = DatabaseConnection.getConnection().prepareCall(title);
+				cstm.setString(1, fields);
+				rs = cstm.executeQuery();
+				while (rs.next()) {
+					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+							.getString("author"), rs.getString("title"), rs
+							.getString("content"), rs.getDate("published_date")
+							.toString()));
+				}
+
+				break;
+			case "content":
+				String content = "{call search_by_content(?)}";
+				cstm = DatabaseConnection.getConnection().prepareCall(content);
+				cstm.setString(1, fields);
+				rs = cstm.executeQuery();
+				while (rs.next()) {
+					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+							.getString("author"), rs.getString("title"), rs
+							.getString("content"), rs.getDate("published_date")
+							.toString()));
+				}
+
+				break;
+			case "id":
+				String id = "{call search_by_id(?)}";
+				cstm = DatabaseConnection.getConnection().prepareCall(id);
+				cstm.setInt(1, Integer.parseInt(fields));
+				rs = cstm.executeQuery();
+				while (rs.next()) {
+					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+							.getString("author"), rs.getString("title"), rs
+							.getString("content"), rs.getDate("published_date")
+							.toString()));
+				}
+
+				break;
 			}
-			pstm.close();
+
 		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	public ArrayList<ArticleDTO> searchRecord(int key, String operation,
-			String fields) throws ClassNotFoundException, SQLException {
-		ArrayList<ArticleDTO> articlelsit = new ArrayList<ArticleDTO>();
-		Statement stm=null;
-		ResultSet rs=null;
-		switch (operation) {
-		case "author":
-			stm=DatabaseConnection.getConnection().createStatement();
-			rs=stm.executeQuery("select * from tbarticle where author LIKE "+fields+'%');
-			while(rs.next()){
-				//articlelsit.add()
+			message = e.getMessage();
+		} finally {
+			try {
+				cstm.close();
+				rs.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				message = e.getMessage();
 			}
-			break;
-		case "title":
-
-			break;
-		case "content":
-
-			break;
-		default:
-			stm=DatabaseConnection.getConnection().createStatement();
-			rs=stm.executeQuery("select * from tbarticle where id="+key);
-			while(rs.next()){
-				articlelsit.add(new ArticleDTO(rs.getInt("id"), rs.getString("author"), rs.getString("title"), rs.getString("content"), rs.getString("published_date")));
-			}
-			break;
 		}
-		stm.close();
-		rs.close();
+
+		if (articlelsit.size() > 0) {
+			message = "true";
+		} else {
+			message = "false";
+		}
 		return articlelsit;
 	}
 
-	public ArrayList<ArticleDTO> listData() {
+	public ArrayList<ArticleDTO> listData(){
 		ArrayList<ArticleDTO> articlelsit = new ArrayList<ArticleDTO>();
-
+		String data = "{call vw_show_by_id}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data); ResultSet rs = cstm.executeQuery();) {
+			while (rs.next()) {
+				articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+						.getString("author"), rs.getString("title"), rs
+						.getString("content"), rs.getString("published_date")));
+			}
+		}catch (Exception e) {
+			message=e.getMessage();
+		}
 		return articlelsit;
 	}
 
+	//public ArrayList<ArticleDTO> setRow(int row){return }
+	//public int returnCountRow(){return}
 }
