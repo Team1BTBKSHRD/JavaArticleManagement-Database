@@ -62,7 +62,7 @@ public class DatabaseConnection {
 			con.close();
 			
 			//creating functions and views
-			executeSqlStatementFromFile("runscript.sql");
+			executeSqlStatementFromFile("db_scipt.sql");
 			
 			return "Created New Database.";
 		}
