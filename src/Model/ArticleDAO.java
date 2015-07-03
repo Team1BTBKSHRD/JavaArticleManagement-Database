@@ -13,9 +13,9 @@ public class ArticleDAO {
 	}
 
 	public boolean insertRecords(ArrayList<ArticleDTO> arraylist) {
-		String data = "{call add_article(?,?,?)}";
+		String stm = "{call add_article(?,?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
-				.prepareCall(data);) {
+				.prepareCall(stm);) {
 			for (ArticleDTO articleDTO : arraylist) {
 				cstm.setString(1, articleDTO.getAuthor());
 				cstm.setString(2, articleDTO.getTitle());
@@ -223,21 +223,23 @@ public class ArticleDAO {
 					query = "{call vw_show_by_id_dsc}";
 					cstm = DatabaseConnection.getConnection()
 							.prepareCall(query);
-					rs=cstm.executeQuery();
-					while(rs.next()){
+					rs = cstm.executeQuery();
+					while (rs.next()) {
 						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
-								.getString("content"), rs.getString("published_date")));
+								.getString("content"), rs
+								.getString("published_date")));
 					}
-				}else{
+				} else {
 					query = "{call vw_show_by_id}";
 					cstm = DatabaseConnection.getConnection()
 							.prepareCall(query);
-					rs=cstm.executeQuery();
-					while(rs.next()){
+					rs = cstm.executeQuery();
+					while (rs.next()) {
 						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
-								.getString("content"), rs.getString("published_date")));
+								.getString("content"), rs
+								.getString("published_date")));
 					}
 				}
 				break;
@@ -246,21 +248,23 @@ public class ArticleDAO {
 					query = "{call vw_short_by_author_desc}";
 					cstm = DatabaseConnection.getConnection()
 							.prepareCall(query);
-					rs=cstm.executeQuery();
-					while(rs.next()){
+					rs = cstm.executeQuery();
+					while (rs.next()) {
 						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
-								.getString("content"), rs.getString("published_date")));
+								.getString("content"), rs
+								.getString("published_date")));
 					}
-				}else{
+				} else {
 					query = "{call vw_short_by_author_asc}";
 					cstm = DatabaseConnection.getConnection()
 							.prepareCall(query);
-					rs=cstm.executeQuery();
-					while(rs.next()){
+					rs = cstm.executeQuery();
+					while (rs.next()) {
 						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
-								.getString("content"), rs.getString("published_date")));
+								.getString("content"), rs
+								.getString("published_date")));
 					}
 				}
 				break;
@@ -269,21 +273,23 @@ public class ArticleDAO {
 					query = "{call vw_short_by_title_desc}";
 					cstm = DatabaseConnection.getConnection()
 							.prepareCall(query);
-					rs=cstm.executeQuery();
-					while(rs.next()){
+					rs = cstm.executeQuery();
+					while (rs.next()) {
 						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
-								.getString("content"), rs.getString("published_date")));
+								.getString("content"), rs
+								.getString("published_date")));
 					}
-				}else{
+				} else {
 					query = "{call vw_short_by_title_asc}";
 					cstm = DatabaseConnection.getConnection()
 							.prepareCall(query);
-					rs=cstm.executeQuery();
-					while(rs.next()){
+					rs = cstm.executeQuery();
+					while (rs.next()) {
 						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
-								.getString("content"), rs.getString("published_date")));
+								.getString("content"), rs
+								.getString("published_date")));
 					}
 				}
 				break;
@@ -292,33 +298,74 @@ public class ArticleDAO {
 					query = "{call vw_short_by_content_desc}";
 					cstm = DatabaseConnection.getConnection()
 							.prepareCall(query);
-					rs=cstm.executeQuery();
-					while(rs.next()){
+					rs = cstm.executeQuery();
+					while (rs.next()) {
 						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
-								.getString("content"), rs.getString("published_date")));
+								.getString("content"), rs
+								.getString("published_date")));
 					}
-				}else{
+				} else {
 					query = "{call vw_short_by_content_asc}";
 					cstm = DatabaseConnection.getConnection()
 							.prepareCall(query);
-					rs=cstm.executeQuery();
-					while(rs.next()){
+					rs = cstm.executeQuery();
+					while (rs.next()) {
 						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
-								.getString("content"), rs.getString("published_date")));
+								.getString("content"), rs
+								.getString("published_date")));
 					}
 				}
 				break;
 
 			}
 		} catch (Exception e) {
-			message=e.getMessage();
+			message = e.getMessage();
 		}
 
 		return artilcelist;
 	}
-	// public ArrayList<ArticleDTO> setRow(int row){return }
-	// public int returnCountRow(){return}
 
+	public ArrayList<ArticleDTO> setRow(int row, int page) {
+		ArrayList<ArticleDTO> artilcelist = new ArrayList<ArticleDTO>();
+		String data = "{call set_row(?,?)}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data);) {
+
+			cstm.setInt(1, row);
+			cstm.setInt(2, page);
+			ResultSet rs = cstm.executeQuery();
+			while (rs.next()) {
+				artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						.getString("author"), rs.getString("title"), rs
+						.getString("content"), rs.getString("published_date")));
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			message = e.getMessage();
+		}
+
+		return artilcelist;
+	}
+
+	public int returnCountRow(){
+		try {
+			CallableStatement cstm = DatabaseConnection.getConnection()
+					.prepareCall(" {call total_record()}");
+			ResultSet rs = cstm.executeQuery();
+			rs.next();
+
+			return rs.getInt(1);
+		} catch (Exception e) {
+			message=e.getMessage();
+		}
+		return 0;
+	}
+
+	/*public static void main(String[] args) throws ClassNotFoundException,
+			SQLException {
+		new ArticleDAO().returnCountRow();
+	}*/
 }

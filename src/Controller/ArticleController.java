@@ -11,7 +11,9 @@ import Model.ArticleDTO;
 import View.ArticleView;
 
 public class ArticleController {
-	// private ArrayList<ArticleDTO> arraylistdto = new ArrayList<ArticleDTO>();
+	private ArticleView articleview = null;
+	private ArticleDAO articledao = null;
+	private ArrayList<ArticleDTO> arraylistdto = null;
 	private String message;
 
 	public String getMessage() {
@@ -19,11 +21,12 @@ public class ArticleController {
 	}
 
 	public void controllerAction(String operation) {
-		ArticleView articleview = new ArticleView();
-		ArticleDAO articledao = new ArticleDAO();
+		articleview = new ArticleView();
+		articledao = new ArticleDAO();
+		arraylistdto = new ArrayList<ArticleDTO>();
 		switch (operation.toLowerCase()) {
 		case "a":
-			// arraylistdto = articleview.add();
+			arraylistdto = articleview.add();
 			message = String
 					.valueOf(articledao.insertRecords(articleview.add()));
 			break;
@@ -35,9 +38,9 @@ public class ArticleController {
 		case "s":
 			String searchoption = new ArticleView().search();
 			String[] parts = searchoption.split(";");
-			String part1 = parts[0];
-			String part2 = parts[1];
-			articleview.setArticles(articledao.searchRecord(part1, part2));
+			String field = parts[0];
+			String key = parts[1];
+			articleview.setArticles(articledao.searchRecord(field, key));
 			articleview.process();
 			message = articledao.getMessage();
 			break;
@@ -66,13 +69,13 @@ public class ArticleController {
 			articleview.setArticles(articledao.listDb());
 			articleview.process();
 		case "ss":
-			ArrayList<ArticleDTO> listsort=new ArrayList<ArticleDTO>();
+			// ArrayList<ArticleDTO> listsort=new ArrayList<ArticleDTO>();
 			String sortoption = new ArticleView().sort().toLowerCase();
 			String[] sort = sortoption.split(";");
 			String fields = sort[0];
-			String orders = sort[1];
-			System.out.println(fields+"  "+orders);
-			articleview.setArticles(articledao.listSort(fields, orders));
+			String order = sort[1];
+			System.out.println(fields + "  " + order);
+			articleview.setArticles(articledao.listSort(fields, order));
 			articleview.process();
 			break;
 		case "h":
@@ -80,14 +83,36 @@ public class ArticleController {
 			articleview.process();
 			break;
 		case "v":
-			articleview.viewDetail(articledao.searchRecord("id", String.valueOf(articleview.viewOneRecord())).get(0));
+			articleview.viewDetail(articledao.searchRecord("id",
+					String.valueOf(articleview.viewOneRecord())).get(0));
 			break;
-		}
+		case "#":
+			int i = articleview.setPageSize();
+			articleview.setTotalRecord(articledao.returnCountRow());
+			articleview.setArticles(articledao.setRow(i, i * 0));
+			
+			articleview.process();
+			break;
+
+		case "n":
+
+			break;
+		case "p":
+
+			break;
+		case "f":
+
+			break;
+		case "l":
+
+			break;
+		}// End of switch();
 
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
 			SQLException, IOException {
+		DatabaseConnection.checkDatabase();
 		ArticleView av = new ArticleView();
 		av.setArticles(new ArticleDAO().listDb());
 		av.process();

@@ -13,7 +13,7 @@ public class DatabaseConnection {
     private static final String DRIVER_NAME = "org.postgresql.Driver";
     private static final String URL = "jdbc:postgresql://localhost:";
     private static final String PORT_NUMBER = "5432";
-    private static final String DB_NAME = "dbarticle";
+    private static final String DB_NAME = "dbarticlebtb";
     private static final String USER = "postgres";
     private static final String PASSWORD = "123";
 	/**
@@ -29,9 +29,9 @@ public class DatabaseConnection {
     public static Connection getConnection() throws 
     		SQLException, ClassNotFoundException {
 		Class.forName(DRIVER_NAME);
-		Connection conn = DriverManager.getConnection(
+		Connection con = DriverManager.getConnection(
 				URL + PORT_NUMBER + "/" + DB_NAME, USER, PASSWORD);
-		return conn;
+		return con;
 	}	
 	/**
 	 * check whether if database is exist or create a new one
@@ -62,7 +62,7 @@ public class DatabaseConnection {
 			con.close();
 			
 			//creating functions and views
-			executeSqlStatementFromFile("db_script.sql");
+			executeSqlStatementFromFile("db_new_script.sql");
 			
 			return "Created New Database.";
 		}

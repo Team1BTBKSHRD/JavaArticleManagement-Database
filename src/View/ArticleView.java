@@ -2,8 +2,6 @@ package View;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -29,6 +27,7 @@ public class ArticleView {
 	private char horizontalLine;
 
 	ArrayList<ArticleDTO> articles;
+	
 	List<ArticleDTO> subPages; /* Use for store a set of articles for view */
 
 	private ArticleController articleController=new ArticleController();
@@ -37,14 +36,27 @@ public class ArticleView {
 	private int currentPage; /* Current page position */
 	private int pageSize; /* Number of records for view */
 	private int totalPage; /* Store All Total Pages */
-
+	private int totalRecord;
+	
+	
+	public int getCurrentPage(){
+		return currentPage;
+	}
+	public void setTotalRecord(int totalRecord){
+		this.totalRecord = totalRecord;
+	}
+	/*public int getTotalRecord(){
+		return totalRecord;
+	}*/
 	/*
 	 * Method setPageSize() Use for set number of record for view pageSize
 	 * parameter is a number of record that we want to view
 	 */
-	public void setPageSize(int pageSize) {
+	public int setPageSize() {
+		int pageSize = getNumberKeyboard("Input Page Size: ");
 		this.pageSize = pageSize;
 		repaginate(); /* After set a new value we need to repaginate */
+		return pageSize;
 	}
 
 	/*
@@ -52,6 +64,7 @@ public class ArticleView {
 	 */
 	public void setArticles(ArrayList<ArticleDTO> articles) {
 		this.articles = articles;
+		System.out.println(this.articles.size()+" Arraylist in setArticles");
 	}
 
 	/*
@@ -83,6 +96,7 @@ public class ArticleView {
 		horizontalLine = '-';
 		verticalLine = '|';
 		repaginate();
+		
 	}
 
 	/*
@@ -117,45 +131,47 @@ public class ArticleView {
 	/*
 	 * Method gotoNextPage() Use for increase the current page
 	 */
-	public void gotoNextPage() {
+	public int gotoNextPage() {
 		if (currentPage < totalPage) { /*
 										 * if current page is not the last page
 										 * increase current page
 										 */
-			currentPage++;
-		} else { /* else set current page into the first page */
-			gotoFirstPage();
+			return currentPage++;
 		}
-		repaginate(); /* After set repaginate page again */
+		/* else set current page into the first page */
+		return 0;//gotoFirstPage();
+		//repaginate(); /* After set repaginate page again */
 	}
 
 	/*
 	 * Method gotoPreviousPage() Use for decrease current page
 	 */
-	public void gotoPreviousPage() {
+	public int gotoPreviousPage() {
 		if (currentPage >= 0) { /*
 								 * if current page is not the start page
 								 * increase current page
 								 */
-			currentPage--;
-		} else { /* else set current page into the last page */
-			gotoLastPage();
-		}
-		repaginate(); /* After set repaginate page again */
+			return currentPage--;
+		} 
+		/* else set current page into the last page */
+		return gotoLastPage();
+		//repaginate(); /* After set repaginate page again */
 	}
 
 	/*
 	 * Method gotoFirstPage Use for set current page into the first page
 	 */
-	public void gotoFirstPage() {
-		currentPage = 0;
+	public int gotoFirstPage() {
+		//currentPage = 0;
+		return 0;
 	}
 
 	/*
 	 * Method gototLastPage() Use for set current page into the last page
 	 */
-	public void gotoLastPage() {
-		currentPage = totalPage - 1;
+	public int gotoLastPage() {
+		//currentPage = totalPage - 1;
+		return totalPage - 1;
 	}
 
 	/*
@@ -163,36 +179,37 @@ public class ArticleView {
 	 * page (add into subPages)
 	 */
 	private void repaginate() {
+		System.out.println(totalRecord);
 		for (int i = 0; i < 10; i++) {
 			System.out.println();
 		}
 		if (!articles.isEmpty()) {
 			totalPage = (int) Math
-					.ceil(this.articles.size() / (float) pageSize); /*
+					.ceil(totalRecord / (float) pageSize); /*
 																	 * Calculate
 																	 * the total
 																	 * page
 																	 */
 			int start = currentPage * pageSize; /* Start index */
 			int end = start + pageSize - 1; /* End index */
-			if (end >= articles.size()) { /*
+			if (end >= totalRecord) { /*
 										 * if end value is out of bound of
 										 * ArrayList
 										 */
-				end = articles.size() - 1; /*
+				end = totalRecord - 1; /*
 											 * set end index = the last index of
 											 * array
 											 */
 			}
-			if (start >= articles.size()) { /*
+			if (start >= totalRecord) { /*
 											 * if start index >= total size of
 											 * ArrayList)
 											 */
 				gotoFirstPage(); /* set current page into the first page */
-				repaginate(); /* repaginate page again */
+				//repaginate(); /* repaginate page again */
 			} else if (start < 0) { /* if start index < 0 */
 				gotoLastPage(); /* set current page into the last page */
-				if (articles.size() % pageSize == 0) { /*
+				if (totalRecord % pageSize == 0) { /*
 														 * if total size is even
 														 * number
 														 */
@@ -205,16 +222,20 @@ public class ArticleView {
 															 * into subPages for
 															 * display
 															 */
+				
 			}
 		}
+		//System.out.println(subPages.size());
 	}
 
 	/*
 	 * Method process() Use for out put the records of subPages
 	 */
 	public void process() {
+		//setTotalRecord(articles.size());
 		repaginate();
-		drawTable(subPages);
+		//drawTable(subPages);
+		drawTable(articles);
 		System.out.println("--------->Input Operation : ");
 		articleController.controllerAction(getStringKeyboard(""));
 		System.out.println(articleController.getMessage());
@@ -425,7 +446,6 @@ public class ArticleView {
 	 * parameter is the articles we want to put into the table
 	 */
 	public void drawTable(List<ArticleDTO> articles) {
-
 		int[] maxColumns = new int[] { 14, 24, 34, 25 };// maxColumnsLength(articles);
 														// /* Find maximum
 														// length for every
@@ -521,7 +541,7 @@ public class ArticleView {
 				buttomRight);
 		// End of Footer;
 		System.out.println(table);
-		System.out.println("Total Records:" + this.articles.size()); /*
+		System.out.println("Total Records:" + totalRecord); /*
 																	 * Output
 																	 * total
 																	 * records
@@ -551,11 +571,11 @@ public class ArticleView {
 		System.out.println("Author: " + article.getAuthor());
 		System.out.println("Title: " + article.getTitle());
 		System.out.println("Content: " + article.getContent());
-		System.out.println("Publish Date: " + article.getPublishDate());
-		
+		System.out.println("Publish Date: " + article.getPublishDate());		
 	}
 
 	public ArrayList<ArticleDTO> add() {
+		@SuppressWarnings("resource")
 		Scanner input = new Scanner(System.in);
 		String author;
 		String title;
@@ -582,6 +602,7 @@ public class ArticleView {
 		} while (true);
 	}// End of add();
 
+	@SuppressWarnings("resource")
 	public static String getStringKeyboard(String message) {
 		Scanner put = new Scanner(System.in);
 		String str = "";
@@ -596,6 +617,7 @@ public class ArticleView {
 		return new SimpleDateFormat("dd/MM/YYYY HH:mm:ss").format(new Date());
 	}
 
+	@SuppressWarnings("resource")
 	private String inputContent() {
 		StringBuilder contents = new StringBuilder();
 		try {
@@ -614,10 +636,11 @@ public class ArticleView {
 		return contents.toString();
 	}// End of inputContent();
 
+	@SuppressWarnings("resource")
 	private int getNumberKeyboard(String message) {
 		Scanner put = new Scanner(System.in);
 		while (true) {
-			//System.out.print(message);
+			System.out.print(message);
 			try {
 				return put.nextInt();
 			} catch (java.util.InputMismatchException e) {
