@@ -15,6 +15,8 @@ public class ArticleController {
 	private ArticleDAO articledao = null;
 	private ArrayList<ArticleDTO> arraylistdto = null;
 	private String message;
+	private static int nextpage; //number of page increase
+	private static int numberofpages; // amount of pages
 
 	public String getMessage() {
 		return message;
@@ -23,26 +25,33 @@ public class ArticleController {
 	public void controllerAction(String operation) {
 		articleview = new ArticleView();
 		articledao = new ArticleDAO();
-		arraylistdto = new ArrayList<ArticleDTO>();
+		arraylistdto = articledao.listDb(); // transfer arraylist from db to arraylist local
+		int totalcount = articledao.returnCountRow(); // number of elements of arraylist
 		switch (operation.toLowerCase()) {
 		case "a":
-			arraylistdto = articleview.add();
+			// arraylistdto = articleview.add();
 			message = String
 					.valueOf(articledao.insertRecords(articleview.add()));
+			arraylistdto = articledao.listDb(); 
+			totalcount = arraylistdto.size();
 			break;
 
 		case "r":
 			message = String.valueOf(articledao.removeRecord(articleview
 					.removeById()));
+			arraylistdto = articledao.listDb();
+			totalcount = arraylistdto.size();
 			break;
 		case "s":
 			String searchoption = new ArticleView().search();
 			String[] parts = searchoption.split(";");
 			String field = parts[0];
 			String key = parts[1];
-			articleview.setArticles(articledao.searchRecord(field, key));
-			articleview.process();
-			message = articledao.getMessage();
+			arraylistdto = articledao.searchRecord(field, key);
+			totalcount = arraylistdto.size();
+			System.err.println(totalcount);
+			//System.out.println(message = articledao.getMessage());
+			
 			break;
 		case "u":
 			ArticleDTO articledto = articleview.update();
@@ -66,36 +75,40 @@ public class ArticleController {
 				message = String.valueOf(articledao.updateRecordAll(articleid,
 						author, title, content));
 			}
-			articleview.setArticles(articledao.listDb());
-			articleview.process();
+			arraylistdto = articledao.listDb();
+			totalcount = arraylistdto.size();
+			break;
 		case "ss":
-			// ArrayList<ArticleDTO> listsort=new ArrayList<ArticleDTO>();
 			String sortoption = new ArticleView().sort().toLowerCase();
 			String[] sort = sortoption.split(";");
 			String fields = sort[0];
 			String order = sort[1];
 			System.out.println(fields + "  " + order);
-			articleview.setArticles(articledao.listSort(fields, order));
-			articleview.process();
+			arraylistdto = articledao.listSort(fields, order);
+			totalcount = arraylistdto.size();
 			break;
 		case "h":
-			articleview.setArticles(articledao.listDb());
-			articleview.process();
+			arraylistdto = articledao.listDb();
+			totalcount = arraylistdto.size();
 			break;
 		case "v":
 			articleview.viewDetail(articledao.searchRecord("id",
 					String.valueOf(articleview.viewOneRecord())).get(0));
+			articleview.setArticles(arraylistdto);
+			if (articleview
+					.getStringKeyboard("Press anykey for Back to home page : ") != null) {
+
+				totalcount = arraylistdto.size();
+			}
 			break;
 		case "#":
-			int i = articleview.setPageSize();
-			articleview.setTotalRecord(articledao.returnCountRow());
-			articleview.setArticles(articledao.setRow(i, i * 0));
-			
-			articleview.process();
+			 numberofpages= articleview.setPageSize();
+			arraylistdto = articledao.setRow(numberofpages, numberofpages * 0);
 			break;
 
 		case "n":
-
+			//System.out.println(nextpage++);
+			arraylistdto = articledao.setRow(numberofpages, numberofpages * nextpage);
 			break;
 		case "p":
 
@@ -106,15 +119,24 @@ public class ArticleController {
 		case "l":
 
 			break;
-		}// End of switch();
+		case "g":
 
+			break;
+		}// End of switch();
+		articleview.setArticles(arraylistdto); 
+		articleview.setTotalRecord(totalcount);
+		articleview.process();
+		
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
 			SQLException, IOException {
+		System.gc();
 		DatabaseConnection.checkDatabase();
 		ArticleView av = new ArticleView();
 		av.setArticles(new ArticleDAO().listDb());
+		av.setTotalRecord(new ArticleDAO().returnCountRow());
 		av.process();
+		
 	}
 }

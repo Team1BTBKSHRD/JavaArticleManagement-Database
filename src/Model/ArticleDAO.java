@@ -7,6 +7,7 @@ import Utilities.DatabaseConnection;
 
 public class ArticleDAO {
 	private String message = null;
+	private ArrayList<ArticleDTO> articlelsit = null;
 
 	public String getMessage() {
 		return message;
@@ -117,11 +118,10 @@ public class ArticleDAO {
 	}
 
 	public ArrayList<ArticleDTO> searchRecord(String operation, String fields) {
-		ArrayList<ArticleDTO> articlelsit = new ArrayList<ArticleDTO>();
 		CallableStatement cstm = null;
 		ResultSet rs = null;
 		try {
-			switch (operation) {
+			switch (operation.toLowerCase()) {
 			case "author":
 				String author = "{call search_by_author(?)}";
 				cstm = DatabaseConnection.getConnection().prepareCall(author);
@@ -176,16 +176,11 @@ public class ArticleDAO {
 
 		} catch (Exception e) {
 			message = e.getMessage();
-		} finally {
-			try {
-				cstm.close();
-				rs.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				message = e.getMessage();
-			}
-		}
-		System.out.println(articlelsit.size());
+		} /*
+		 * finally { try { cstm.close(); rs.close(); } catch (SQLException e) {
+		 * // TODO Auto-generated catch block message = e.getMessage(); } }
+		 */
+		// System.out.println(articlelsit.size()+"DAO");
 		if (articlelsit.size() > 0) {
 			message = "true";
 		} else {
@@ -196,7 +191,7 @@ public class ArticleDAO {
 	}
 
 	public ArrayList<ArticleDTO> listDb() {
-		ArrayList<ArticleDTO> articlelsit = new ArrayList<ArticleDTO>();
+		articlelsit = new ArrayList<ArticleDTO>();
 		String data = "{call vw_show_by_id}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data); ResultSet rs = cstm.executeQuery();) {
@@ -212,7 +207,7 @@ public class ArticleDAO {
 	}
 
 	public ArrayList<ArticleDTO> listSort(String fields, String orders) {
-		ArrayList<ArticleDTO> artilcelist = new ArrayList<ArticleDTO>();
+		articlelsit = new ArrayList<ArticleDTO>();
 		CallableStatement cstm = null;
 		ResultSet rs = null;
 		String query = "";
@@ -225,7 +220,7 @@ public class ArticleDAO {
 							.prepareCall(query);
 					rs = cstm.executeQuery();
 					while (rs.next()) {
-						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
 								.getString("content"), rs
 								.getString("published_date")));
@@ -236,7 +231,7 @@ public class ArticleDAO {
 							.prepareCall(query);
 					rs = cstm.executeQuery();
 					while (rs.next()) {
-						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
 								.getString("content"), rs
 								.getString("published_date")));
@@ -250,7 +245,7 @@ public class ArticleDAO {
 							.prepareCall(query);
 					rs = cstm.executeQuery();
 					while (rs.next()) {
-						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
 								.getString("content"), rs
 								.getString("published_date")));
@@ -261,7 +256,7 @@ public class ArticleDAO {
 							.prepareCall(query);
 					rs = cstm.executeQuery();
 					while (rs.next()) {
-						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
 								.getString("content"), rs
 								.getString("published_date")));
@@ -275,7 +270,7 @@ public class ArticleDAO {
 							.prepareCall(query);
 					rs = cstm.executeQuery();
 					while (rs.next()) {
-						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
 								.getString("content"), rs
 								.getString("published_date")));
@@ -286,7 +281,7 @@ public class ArticleDAO {
 							.prepareCall(query);
 					rs = cstm.executeQuery();
 					while (rs.next()) {
-						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
 								.getString("content"), rs
 								.getString("published_date")));
@@ -300,7 +295,7 @@ public class ArticleDAO {
 							.prepareCall(query);
 					rs = cstm.executeQuery();
 					while (rs.next()) {
-						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
 								.getString("content"), rs
 								.getString("published_date")));
@@ -311,7 +306,7 @@ public class ArticleDAO {
 							.prepareCall(query);
 					rs = cstm.executeQuery();
 					while (rs.next()) {
-						artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+						articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 								.getString("author"), rs.getString("title"), rs
 								.getString("content"), rs
 								.getString("published_date")));
@@ -324,11 +319,11 @@ public class ArticleDAO {
 			message = e.getMessage();
 		}
 
-		return artilcelist;
+		return articlelsit;
 	}
 
 	public ArrayList<ArticleDTO> setRow(int row, int page) {
-		ArrayList<ArticleDTO> artilcelist = new ArrayList<ArticleDTO>();
+		articlelsit = new ArrayList<ArticleDTO>();
 		String data = "{call set_row(?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data);) {
@@ -337,7 +332,7 @@ public class ArticleDAO {
 			cstm.setInt(2, page);
 			ResultSet rs = cstm.executeQuery();
 			while (rs.next()) {
-				artilcelist.add(new ArticleDTO(rs.getInt("id"), rs
+				articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 						.getString("author"), rs.getString("title"), rs
 						.getString("content"), rs.getString("published_date")));
 			}
@@ -347,10 +342,10 @@ public class ArticleDAO {
 			message = e.getMessage();
 		}
 
-		return artilcelist;
+		return articlelsit;
 	}
 
-	public int returnCountRow(){
+	public int returnCountRow() {
 		try {
 			CallableStatement cstm = DatabaseConnection.getConnection()
 					.prepareCall(" {call total_record()}");
@@ -359,13 +354,13 @@ public class ArticleDAO {
 
 			return rs.getInt(1);
 		} catch (Exception e) {
-			message=e.getMessage();
+			message = e.getMessage();
 		}
 		return 0;
 	}
 
-	/*public static void main(String[] args) throws ClassNotFoundException,
-			SQLException {
-		new ArticleDAO().returnCountRow();
-	}*/
+	/*
+	 * public static void main(String[] args) throws ClassNotFoundException,
+	 * SQLException { new ArticleDAO().returnCountRow(); }
+	 */
 }

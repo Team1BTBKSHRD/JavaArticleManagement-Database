@@ -64,7 +64,6 @@ public class ArticleView {
 	 */
 	public void setArticles(ArrayList<ArticleDTO> articles) {
 		this.articles = articles;
-		System.out.println(this.articles.size()+" Arraylist in setArticles");
 	}
 
 	/*
@@ -81,6 +80,7 @@ public class ArticleView {
 											 */
 			gotoLastPage();
 		}
+		
 		repaginate(); /* repaginate after set value */
 	}
 
@@ -179,7 +179,6 @@ public class ArticleView {
 	 * page (add into subPages)
 	 */
 	private void repaginate() {
-		System.out.println(totalRecord);
 		for (int i = 0; i < 10; i++) {
 			System.out.println();
 		}
@@ -233,12 +232,12 @@ public class ArticleView {
 	 */
 	public void process() {
 		//setTotalRecord(articles.size());
+		
 		repaginate();
-		//drawTable(subPages);
-		drawTable(articles);
-		System.out.println("--------->Input Operation : ");
-		articleController.controllerAction(getStringKeyboard(""));
-		System.out.println(articleController.getMessage());
+		drawTable(subPages);
+		//drawTable(articles);
+		articleController.controllerAction(getStringKeyboard("--------->Input Operation : "));
+		//System.out.println(articleController.getMessage());
 	}
 
 	/*
