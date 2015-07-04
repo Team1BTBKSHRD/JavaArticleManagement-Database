@@ -1,0 +1,16 @@
++================================= <{ Help }> ========================================+
+| 1.  F)  Frist       |    goto the first page.      (press F*)			       |
+| 2.  P)  Previous    |    goto the previous page.   (press P*)                        |
+| 3.  N)  Next        |    goto next page.           (press N*)                        |
+| 4.  L)  Last        |    goto the last page.       (press L*)                        |
+| 5.  A)  Add         |    add new article.          (press A*)                        |
+| 6.  R)  Remove      |    remove article.           (press R*)                        |
+| 7.  S)  Search      |    search article (by id ,title,author,content).(press S*)     |
+| 8.  U)  Update      |    update article (by id).   (press U*)                        |
+| 9.  SS) Sort        |    sort article (by id,title,author). (press SS*)              |
+| 10. H)  Home        |    goto home page.           (press H*)                        |
+| 11. V)  View detail |    view detail article.      (press V*)                        |
+| 12. G)  Goto        |    goto spacific page.       (press G*)                        |
+| 13. #)  Set Row     |    set number row to display.(press #*)                        |
+| 14. E)  Exit :      |    exit application.         (press E*)                        |
++================================= <{ Help }>  ========================================+
