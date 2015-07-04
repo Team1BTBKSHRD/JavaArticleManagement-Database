@@ -6,14 +6,14 @@ import java.util.ArrayList;
 import Utilities.DatabaseConnection;
 
 public class ArticleDAO {
-	private String message = null;
+	private Exception messageerror = null;
 	private ArrayList<ArticleDTO> articlelsit = null;
 
-	public String getMessage() {
-		return message;
+	public Exception getMessageError() {
+		return messageerror;
 	}
 
-	public boolean insertRecords(ArrayList<ArticleDTO> arraylist) {
+	public boolean insertRecords(ArrayList<ArticleDTO> arraylist) throws ClassNotFoundException, SQLException {
 		String stm = "{call add_article(?,?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(stm);) {
@@ -24,14 +24,10 @@ public class ArticleDAO {
 				cstm.execute();
 			}
 			return true;
-		} catch (Exception e) {
-			message = e.getMessage();
 		}
-
-		return false;
 	}
 
-	public boolean removeRecord(int key) {
+	public boolean removeRecord(int key) throws ClassNotFoundException, SQLException {
 		String data = "{call delete_article(?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data);) {
@@ -39,13 +35,10 @@ public class ArticleDAO {
 			ResultSet rs = cstm.executeQuery();
 			rs.next();
 			return rs.getBoolean(1);
-		} catch (Exception e) {
-			message = e.getMessage();
-		}
-		return false;
+		} 
 	}
 
-	public boolean updateRecordAuthor(int key, String author) {
+	public boolean updateRecordAuthor(int key, String author) throws ClassNotFoundException, SQLException {
 		String data = "{call update_article_author(?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data);) {
@@ -56,14 +49,13 @@ public class ArticleDAO {
 				return true;
 
 			}
-		} catch (Exception e) {
-			message = e.getMessage();
 		}
 
 		return false;
 	}
 
-	public boolean updateRecordTitle(int key, String title) {
+	public boolean updateRecordTitle(int key, String title)
+			throws ClassNotFoundException, SQLException {
 		String data = "{call update_article_title(?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data);) {
@@ -74,14 +66,13 @@ public class ArticleDAO {
 				return true;
 
 			}
-		} catch (Exception e) {
-			message = e.getMessage();
 		}
 
 		return false;
 	}
 
-	public boolean updateRecordContent(int key, String content) {
+	public boolean updateRecordContent(int key, String content)
+			throws ClassNotFoundException, SQLException {
 		String data = "{call update_article_content(?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data);) {
@@ -92,15 +83,13 @@ public class ArticleDAO {
 				return true;
 
 			}
-		} catch (Exception e) {
-			message = e.getMessage();
 		}
 
 		return false;
 	}
 
 	public boolean updateRecordAll(int key, String author, String title,
-			String content) {
+			String content) throws ClassNotFoundException, SQLException {
 		String data = "{call update_article(?,?,?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data);) {
@@ -111,13 +100,10 @@ public class ArticleDAO {
 			ResultSet rs = cstm.executeQuery();
 			rs.next();
 			return rs.getBoolean(1);
-		} catch (Exception e) {
-			message = e.getMessage();
 		}
-		return false;
 	}
 
-	public ArrayList<ArticleDTO> searchRecord(String operation, String fields) {
+	public ArrayList<ArticleDTO> searchRecord(String operation, String fields) throws SQLException,ClassNotFoundException {
 		CallableStatement cstm = null;
 		ResultSet rs = null;
 		try {
@@ -173,24 +159,16 @@ public class ArticleDAO {
 				}
 				break;
 			}
-
-		} catch (Exception e) {
-			message = e.getMessage();
-		} /*
-		 * finally { try { cstm.close(); rs.close(); } catch (SQLException e) {
-		 * // TODO Auto-generated catch block message = e.getMessage(); } }
-		 */
-		// System.out.println(articlelsit.size()+"DAO");
-		if (articlelsit.size() > 0) {
-			message = "true";
-		} else {
-			message = "false";
+			cstm.close();
+			rs.close();
+		} catch (ClassNotFoundException | SQLException e) {
+			throw e;
 		}
-
 		return articlelsit;
 	}
 
-	public ArrayList<ArticleDTO> listDb() {
+	public ArrayList<ArticleDTO> listDb() throws ClassNotFoundException,
+			SQLException {
 		articlelsit = new ArrayList<ArticleDTO>();
 		String data = "{call vw_show_by_id}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
@@ -200,13 +178,12 @@ public class ArticleDAO {
 						.getString("author"), rs.getString("title"), rs
 						.getString("content"), rs.getString("published_date")));
 			}
-		} catch (Exception e) {
-			message = e.getMessage();
 		}
 		return articlelsit;
 	}
 
-	public ArrayList<ArticleDTO> listSort(String fields, String orders) {
+	public ArrayList<ArticleDTO> listSort(String fields, String orders)
+			throws SQLException,ClassNotFoundException{
 		articlelsit = new ArrayList<ArticleDTO>();
 		CallableStatement cstm = null;
 		ResultSet rs = null;
@@ -315,14 +292,17 @@ public class ArticleDAO {
 				break;
 
 			}
-		} catch (Exception e) {
-			message = e.getMessage();
+			cstm.close();
+			rs.close();
+		} catch (ClassNotFoundException|SQLException e) {
+			throw e;
 		}
 
 		return articlelsit;
 	}
 
-	public ArrayList<ArticleDTO> setRow(int row, int page) {
+	public ArrayList<ArticleDTO> setRow(int row, int page)
+			throws ClassNotFoundException, SQLException {
 		articlelsit = new ArrayList<ArticleDTO>();
 		String data = "{call set_row(?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
@@ -337,28 +317,24 @@ public class ArticleDAO {
 						.getString("content"), rs.getString("published_date")));
 			}
 
-		} catch (Exception e) {
-			// TODO: handle exception
-			message = e.getMessage();
 		}
-
 		return articlelsit;
 	}
 
-	public int returnCountRow() {
-		try {
-			CallableStatement cstm = DatabaseConnection.getConnection()
-					.prepareCall(" {call total_record()}");
-			ResultSet rs = cstm.executeQuery();
+	public int returnCountRow() throws SQLException, ClassNotFoundException {
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(" {call total_record()}");
+				ResultSet rs = cstm.executeQuery();) {
+
 			rs.next();
 
 			return rs.getInt(1);
-		} catch (Exception e) {
-			message = e.getMessage();
 		}
-		return 0;
 	}
-
+	/*public int returnLasId(){
+		
+		return 
+	}*/
 	/*
 	 * public static void main(String[] args) throws ClassNotFoundException,
 	 * SQLException { new ArticleDAO().returnCountRow(); }

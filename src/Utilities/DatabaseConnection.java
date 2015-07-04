@@ -99,6 +99,9 @@ public class DatabaseConnection {
 		stm.close();
 		con.close();				
 	}
+	public static String getDatabaseName(){
+		return DB_NAME;
+	}
 	/*public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
 		System.out.println(checkDatabase());
 	}*/
