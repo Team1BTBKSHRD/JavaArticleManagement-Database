@@ -1,5 +1,7 @@
 package View;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,35 +28,35 @@ public class ArticleView {
 	private char verticalLine;
 	private char horizontalLine;
 
+	private int existId;
 	ArrayList<ArticleDTO> articles;
-	
-	List<ArticleDTO> subPages; /* Use for store a set of articles for view */
 
-	private ArticleController articleController=new ArticleController();
-	
-	
+	// private ArticleController articleController = new ArticleController();
+
 	private int currentPage; /* Current page position */
 	private int pageSize; /* Number of records for view */
-	private int totalPage; /* Store All Total Pages */
+	private static int totalPage; /* Store All Total Pages */
 	private int totalRecord;
-	
-	
-	public int getCurrentPage(){
+
+	public int getCurrentPage() {
 		return currentPage;
 	}
-	public void setTotalRecord(int totalRecord){
+
+	public void setTotalRecord(int totalRecord) {
 		this.totalRecord = totalRecord;
+		repaginate();
 	}
-	/*public int getTotalRecord(){
-		return totalRecord;
-	}*/
+
 	/*
 	 * Method setPageSize() Use for set number of record for view pageSize
 	 * parameter is a number of record that we want to view
 	 */
+	public int getPageSize() {
+		return pageSize;
+	}
+
 	public int setPageSize() {
-		int pageSize = getNumberKeyboard("Input Page Size: ");
-		this.pageSize = pageSize;
+		pageSize = getNumberKeyboard("Input Page Size: ");
 		repaginate(); /* After set a new value we need to repaginate */
 		return pageSize;
 	}
@@ -70,7 +72,8 @@ public class ArticleView {
 	 * Method gotoPage Use for set number of page that the client want to visit
 	 * pageNumbe parameter is a number of page
 	 */
-	public void gotoPage(int pageNumber) {
+	public void gotoPage() {
+		int pageNumber = getNumberKeyboard("Input Page: ");
 		currentPage = pageNumber - 1; /* currentPage value started from 0 */
 		if (currentPage < 0) { /* Goto first page if current page < 0 */
 			gotoFirstPage();
@@ -80,7 +83,7 @@ public class ArticleView {
 											 */
 			gotoLastPage();
 		}
-		
+
 		repaginate(); /* repaginate after set value */
 	}
 
@@ -89,6 +92,7 @@ public class ArticleView {
 	 * default table style and regainate page again
 	 */
 	public ArticleView() {
+
 		currentPage = 0;
 		pageSize = 5;
 		articles = new ArrayList<ArticleDTO>();
@@ -96,7 +100,7 @@ public class ArticleView {
 		horizontalLine = '-';
 		verticalLine = '|';
 		repaginate();
-		
+
 	}
 
 	/*
@@ -131,47 +135,55 @@ public class ArticleView {
 	/*
 	 * Method gotoNextPage() Use for increase the current page
 	 */
-	public int gotoNextPage() {
-		if (currentPage < totalPage) { /*
-										 * if current page is not the last page
-										 * increase current page
-										 */
-			return currentPage++;
+	public void gotoNextPage() {
+
+		if (currentPage < totalPage - 1) { /*
+											 * if current page is not the last
+											 * page increase current page
+											 */
+			currentPage++;
+		} else {/* else set current page into the first page */
+			gotoFirstPage();
 		}
-		/* else set current page into the first page */
-		return 0;//gotoFirstPage();
-		//repaginate(); /* After set repaginate page again */
+		repaginate(); /* After set repaginate page again */
+		/*
+		 * System.out.println("CurrentPage = " + currentPage);
+		 * System.out.println("Total Record: " + totalRecord);
+		 * System.out.println("Total Page = " + totalPage);
+		 */
 	}
 
 	/*
 	 * Method gotoPreviousPage() Use for decrease current page
 	 */
-	public int gotoPreviousPage() {
-		if (currentPage >= 0) { /*
+	public void gotoPreviousPage() {
+		if (currentPage > 0) { /*
 								 * if current page is not the start page
 								 * increase current page
 								 */
-			return currentPage--;
-		} 
+			currentPage--;
+		}
 		/* else set current page into the last page */
-		return gotoLastPage();
-		//repaginate(); /* After set repaginate page again */
+		else {
+
+			gotoLastPage();
+
+		}
+		repaginate(); /* After set repaginate page again */
 	}
 
 	/*
 	 * Method gotoFirstPage Use for set current page into the first page
 	 */
-	public int gotoFirstPage() {
-		//currentPage = 0;
-		return 0;
+	public void gotoFirstPage() {
+		currentPage = 0;
 	}
 
 	/*
 	 * Method gototLastPage() Use for set current page into the last page
 	 */
-	public int gotoLastPage() {
-		//currentPage = totalPage - 1;
-		return totalPage - 1;
+	public void gotoLastPage() {
+		currentPage = totalPage - 1;
 	}
 
 	/*
@@ -179,65 +191,26 @@ public class ArticleView {
 	 * page (add into subPages)
 	 */
 	private void repaginate() {
-		for (int i = 0; i < 10; i++) {
+		if (!articles.isEmpty()) {
+			totalPage = (int) Math.ceil(totalRecord / (float) pageSize);
+			/*
+			 * Calculate the total page
+			 */
+			//System.out.println("Total Page repagination: " + totalPage);
+		}
+		for (int i = 0; i < 3; i++) {
 			System.out.println();
 		}
-		if (!articles.isEmpty()) {
-			totalPage = (int) Math
-					.ceil(totalRecord / (float) pageSize); /*
-																	 * Calculate
-																	 * the total
-																	 * page
-																	 */
-			int start = currentPage * pageSize; /* Start index */
-			int end = start + pageSize - 1; /* End index */
-			if (end >= totalRecord) { /*
-										 * if end value is out of bound of
-										 * ArrayList
-										 */
-				end = totalRecord - 1; /*
-											 * set end index = the last index of
-											 * array
-											 */
-			}
-			if (start >= totalRecord) { /*
-											 * if start index >= total size of
-											 * ArrayList)
-											 */
-				gotoFirstPage(); /* set current page into the first page */
-				//repaginate(); /* repaginate page again */
-			} else if (start < 0) { /* if start index < 0 */
-				gotoLastPage(); /* set current page into the last page */
-				if (totalRecord % pageSize == 0) { /*
-														 * if total size is even
-														 * number
-														 */
-					currentPage--; /* decrease current page */
-				}
-				repaginate(); /* repaginate page again */
-			} else { /* else start < total records */
-				subPages = articles.subList(start, end + 1); /*
-															 * Separate them
-															 * into subPages for
-															 * display
-															 */
-				
-			}
-		}
-		//System.out.println(subPages.size());
 	}
 
 	/*
 	 * Method process() Use for out put the records of subPages
 	 */
-	public void process() {
-		//setTotalRecord(articles.size());
-		
+	public String process() {
 		repaginate();
-		drawTable(subPages);
-		//drawTable(articles);
-		articleController.controllerAction(getStringKeyboard("--------->Input Operation : "));
-		//System.out.println(articleController.getMessage());
+		drawTable(articles);
+		//return getStringKeyboard("--------->Input Operation : ");
+		return Validate.inputData();
 	}
 
 	/*
@@ -294,10 +267,10 @@ public class ArticleView {
 	}
 
 	public void menu(int[] maxColumns, int totalLenght) {
-		final String MENU1 = "F) First | P) Previous | N) Next | L) Last";
-		final String MENU2 = "A) Add | R) Remove | S)Search |  U) Update | SS) Sort";
-		final String MENU3 = "H) Home | V) View Detail | G) Goto | #) Set Row";
-		final String MENU4 = "W) Write | Re) Read | B) Backup | E) Exit";
+		final String MENU1 = " F) First       | P) Previous | N) Next        |  L) Last       ";
+		final String MENU2 = " H) Home        | G) Goto     | S) Search      |  V) View Detail";
+		final String MENU3 = " A) Add         | R) Remove   | U) Update      |  SS) Sort      \n";
+		final String MENU4 = "                  #) Set Row     | He) Help     | E) Exit               ";
 		String strMenu = "";
 		strMenu = addHorizontalLine(strMenu, maxColumns, topLeft,
 				horizontalLine, topRight);
@@ -342,37 +315,6 @@ public class ArticleView {
 	private static final String[] headers = { "ID", "AUTHOR ", "TITLE ",
 			"PUBLISH DATE" };
 
-	/*
-	 * private int[] maxColumnsLength(List<Article> articles) { int[] maxLengths
-	 * = new int[] { headers[0].length(), headers[1].length(),
-	 * headers[2].length(), headers[3].length()};
-	 * 
-	 * for (Article article : articles) { if
-	 * (Integer.toString(article.getId()).length() > maxLengths[0]) Find maximum
-	 * length of column ID
-	 * 
-	 * maxLengths[0] = Integer.toString(article.getId()).length() + 6; // +
-	 * padding 6 space;
-	 * 
-	 * if (article.getAuthor().length() > maxLengths[1]) Find maximum length of
-	 * column Author
-	 * 
-	 * if(article.getAuthor().length() > 10) maxLengths[1] = 13; else
-	 * maxLengths[1] = article.getAuthor().length();
-	 * 
-	 * if (article.getTitle().length() > maxLengths[2]) Find maximum length of
-	 * column Title
-	 * 
-	 * if(article.getTitle().length() > 23) maxLengths[2] = 23; else
-	 * maxLengths[2] = article.getTitle().length();
-	 * 
-	 * if (article.getPublishDate().length() > maxLengths[3]) Find maximum
-	 * length of column Publish Date
-	 * 
-	 * maxLengths[3] = article.getPublishDate().length();
-	 * 
-	 * } return maxLengths; return maximum length of every columns }
-	 */
 	/*
 	 * Method addLetter() Use for add letter into string string parameter is
 	 * original string, letter is the character we need to add, letterNumber
@@ -541,10 +483,9 @@ public class ArticleView {
 		// End of Footer;
 		System.out.println(table);
 		System.out.println("Total Records:" + totalRecord); /*
-																	 * Output
-																	 * total
-																	 * records
-																	 */
+															 * Output total
+															 * records
+															 */
 		System.out
 				.println("Pages: " + (this.currentPage + 1) + "/" + totalPage); /*
 																				 * Output
@@ -558,19 +499,21 @@ public class ArticleView {
 		// Menu bar;
 		menu(maxColumns, totalLenght); /* Output Menu Bar */
 	}
+
 	/*
 	 * viewOneRecord
-	 * */
-	public int viewOneRecord(){
-		System.out.println("Please input id : ");
-		return getNumberKeyboard("");
+	 */
+	public int viewOneRecord() {
+		return getNumberKeyboard("Please input id : ");
 	}
-	public void viewDetail(ArticleDTO article) {
+
+	public void viewDetail(ArticleDTO article){
 		System.out.println("ID: " + article.getId());
 		System.out.println("Author: " + article.getAuthor());
 		System.out.println("Title: " + article.getTitle());
 		System.out.println("Content: " + article.getContent());
-		System.out.println("Publish Date: " + article.getPublishDate());		
+		System.out.println("Publish Date: " + article.getPublishDate());
+		System.out.println("\n\n");
 	}
 
 	public ArrayList<ArticleDTO> add() {
@@ -587,7 +530,8 @@ public class ArticleView {
 			System.out.print("Please Enter Content: ");
 			content = inputContent();
 
-			articles.add(new ArticleDTO(1, author, title, content, currentDate()));
+			articles.add(new ArticleDTO(1, author, title, content,
+					currentDate()));
 			// logfile.writeLogAdd(newArticle);
 
 			System.out.print("Do you want to continues?(Y/N)");
@@ -602,7 +546,8 @@ public class ArticleView {
 	}// End of add();
 
 	@SuppressWarnings("resource")
-	public static String getStringKeyboard(String message) {
+	public String getStringKeyboard(String message) {
+		System.out.println("\n\n\n");
 		Scanner put = new Scanner(System.in);
 		String str = "";
 		while (str.equals("")) {
@@ -652,52 +597,82 @@ public class ArticleView {
 		}
 	}
 
-	public ArticleDTO update() {
-		try {
-			int id = getNumberKeyboard("Please, input ID for update: ");
+	public int checkUpdate() throws ClassNotFoundException,
+			NullPointerException, SQLException {
+		return existId=Integer
+				.parseInt(getStringKeyboard("Please, input ID for update: "));
+	}
 
-			String author = null;
-			String title = null;
-			String content = null;
-			String option = "";
-
+	public ArticleDTO update(int check) throws ClassNotFoundException,
+			NullPointerException, SQLException {
+		String author = "";
+		String title = "";
+		String content = "";
+		String option = "";
+		// System.out.println(id);
+		if (check>0) {
 			option = getStringKeyboard("Update : Au) Author | T) Title) | C) Content | Al) All: ");
 			switch (option.toLowerCase()) {
-			case "au":/* Updating Author by ID */
+			case "au": // Updating Author by ID
 				author = getStringKeyboard("Please Input Author : ");
 				break;
-			case "t":/* Updating Title by ID */
+			case "t": // Updating Title by ID
 				title = getStringKeyboard("Please Input Title : ");
 				break;
-			case "c":/* Updating Content by ID */
+			case "c": // Updating Content by ID
 				System.out.print("Input Content : ");
 				content = inputContent();
 				break;
-			case "al": /* Updating All Fields by ID */
+			case "al": // Updating All Fields by ID
 				author = getStringKeyboard("Please Input Author : ");
 				title = getStringKeyboard("Please Input Title : ");
 				System.out.print("Please input Content: ");
 				content = inputContent();
 				break;
-			default:/* Not Permit invalid Key */
+			default: // Not Permit invalid Key
 				System.err.println("Invalid");
 				waiting();
 				break;
 			}// End of switch;
 			System.out.println("Update Completed!");
-			//waiting();
-			return new ArticleDTO(id, author, title, content, null);
-		} catch (Exception e) {
-			// logfile.writeLogException(e, "update", "Management");
+			return new ArticleDTO(existId, author, title, content, null);
+		} else {
+			System.err.println("false");
+			waiting();
 		}
-		// logfile.writeLogEdit(articles.get(index));
 		return null;
 	}// End of update();
 
+	/*
+	 * public ArticleDTO update() { try { int id =
+	 * getNumberKeyboard("Input ID for update: ");
+	 * 
+	 * String author = null; String title = null; String content = null; String
+	 * option = "";
+	 * 
+	 * option =
+	 * getStringKeyboard("Update : Au) Author | T) Title) | C) Content | Al) All: "
+	 * ); switch (option.toLowerCase()) { case "au": Updating Author by ID
+	 * author = getStringKeyboard("Please input Author : "); break; case "t":
+	 * Updating Title by ID title = getStringKeyboard("Please input Title : ");
+	 * break; case "c": Updating Content by ID
+	 * System.out.print("Input content : "); content = inputContent(); break;
+	 * case "al": Updating All Fields by ID author =
+	 * getStringKeyboard("Please input author : "); title =
+	 * getStringKeyboard("Please input title : ");
+	 * System.out.print("Please input content: "); content = inputContent();
+	 * break; default: Not Permit invalid Key System.err.println("Invalid");
+	 * waiting(); break; }// End of switch;
+	 * System.out.println("Update completed!"); //waiting(); return new
+	 * ArticleDTO(id, author, title, content, null); } catch (Exception e) { //
+	 * logfile.writeLogException(e, "update", "Management"); } //
+	 * logfile.writeLogEdit(articles.get(index)); return null; }// End of
+	 * update();
+	 */
 	public String search() {
 		String searchOption;
 		String searchBy = getStringKeyboard("I) ID | Au)Author | T)Title | P)Publish Date--> ");
-		String key = getStringKeyboard("Please, input key for search: ");
+		String key = getStringKeyboard("Input key for search: ");
 		switch (searchBy.toLowerCase()) {
 		case "i": // search ID
 			searchOption = "id;" + key;
@@ -712,7 +687,7 @@ public class ArticleView {
 			searchOption = "title;" + key;
 			break;
 		default:
-			System.out.println("No Option. Please Input Again.");
+			System.out.println("No Option. Please input again.");
 			waiting();
 			return null;
 		}
@@ -720,7 +695,7 @@ public class ArticleView {
 	}// End of search();
 
 	public String sort() {
-		String sortBy = getStringKeyboard("Sort By: I) ID | Au) Author | T) Title | P) Publish Date --> ");
+		String sortBy = getStringKeyboard("Sort By: I) ID | Au) Author | T) Title  --> ");
 		String sortOption;
 		switch (sortBy.toLowerCase()) {
 		case "i": // sort ID
@@ -736,9 +711,7 @@ public class ArticleView {
 			sortOption = "title;";
 			break;
 		default:
-			System.out.println("No Option. Please Input Again.");
-			waiting();
-			return null;
+			return "id;DESC";
 		}
 		String orderBy = getStringKeyboard("Order By: ASC or DESC --> ");
 		if (orderBy.equalsIgnoreCase("asc"))
@@ -752,11 +725,18 @@ public class ArticleView {
 		return getNumberKeyboard("Please, input ID for remove");
 	}
 
-	private void waiting() {
+	public void waiting() {
 		System.out.print("Press Enter to continue...");
 		try {
 			System.in.read();
 		} catch (Exception e) {
 		}
+	}
+	public void alertMessage(String message){
+		System.out.println(message);
+	}
+	/*Help  Option sarin call funciton help from Controller*/
+	public void helpOption(String data) throws IOException{
+		System.out.print(data);
 	}
 }// End of class;

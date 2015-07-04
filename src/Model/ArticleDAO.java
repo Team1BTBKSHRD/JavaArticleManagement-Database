@@ -8,12 +8,14 @@ import Utilities.DatabaseConnection;
 public class ArticleDAO {
 	private Exception messageerror = null;
 	private ArrayList<ArticleDTO> articlelsit = null;
+	public static String lenghtId = "";
 
 	public Exception getMessageError() {
 		return messageerror;
 	}
 
-	public boolean insertRecords(ArrayList<ArticleDTO> arraylist) throws ClassNotFoundException, SQLException {
+	public boolean insertRecords(ArrayList<ArticleDTO> arraylist)
+			throws ClassNotFoundException, SQLException {
 		String stm = "{call add_article(?,?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(stm);) {
@@ -22,23 +24,26 @@ public class ArticleDAO {
 				cstm.setString(2, articleDTO.getTitle());
 				cstm.setString(3, articleDTO.getContent());
 				cstm.execute();
+				lenghtId += returnLastId() + ";";
 			}
 			return true;
 		}
 	}
 
-	public boolean removeRecord(int key) throws ClassNotFoundException, SQLException {
+	public boolean removeRecord(int key) throws ClassNotFoundException,
+			SQLException {
 		String data = "{call delete_article(?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
-				.prepareCall(data);) {
+				.prepareCall(data); ResultSet rs = cstm.executeQuery();) {
 			cstm.setInt(1, key);
-			ResultSet rs = cstm.executeQuery();
+
 			rs.next();
 			return rs.getBoolean(1);
-		} 
+		}
 	}
 
-	public boolean updateRecordAuthor(int key, String author) throws ClassNotFoundException, SQLException {
+	public boolean updateRecordAuthor(int key, String author)
+			throws ClassNotFoundException, SQLException {
 		String data = "{call update_article_author(?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data);) {
@@ -92,27 +97,29 @@ public class ArticleDAO {
 			String content) throws ClassNotFoundException, SQLException {
 		String data = "{call update_article(?,?,?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
-				.prepareCall(data);) {
+				.prepareCall(data); ResultSet rs = cstm.executeQuery();) {
 			cstm.setInt(1, key);
 			cstm.setString(2, author);
 			cstm.setString(3, title);
 			cstm.setString(4, content);
-			ResultSet rs = cstm.executeQuery();
+
 			rs.next();
 			return rs.getBoolean(1);
 		}
 	}
 
-	public ArrayList<ArticleDTO> searchRecord(String operation, String fields) throws SQLException,ClassNotFoundException {
+	public ArrayList<ArticleDTO> searchRecord(String operation, String fields)
+			throws SQLException, ClassNotFoundException, NullPointerException {
 		CallableStatement cstm = null;
+		articlelsit = new ArrayList<ArticleDTO>();
 		ResultSet rs = null;
-		try {
 			switch (operation.toLowerCase()) {
 			case "author":
 				String author = "{call search_by_author(?)}";
 				cstm = DatabaseConnection.getConnection().prepareCall(author);
 				cstm.setString(1, fields);
 				rs = cstm.executeQuery();
+
 				while (rs.next()) {
 					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
 							.getString("author"), rs.getString("title"), rs
@@ -161,10 +168,8 @@ public class ArticleDAO {
 			}
 			cstm.close();
 			rs.close();
-		} catch (ClassNotFoundException | SQLException e) {
-			throw e;
-		}
-		return articlelsit;
+			return articlelsit;
+		
 	}
 
 	public ArrayList<ArticleDTO> listDb() throws ClassNotFoundException,
@@ -183,12 +188,11 @@ public class ArticleDAO {
 	}
 
 	public ArrayList<ArticleDTO> listSort(String fields, String orders)
-			throws SQLException,ClassNotFoundException{
+			throws SQLException, ClassNotFoundException {
 		articlelsit = new ArrayList<ArticleDTO>();
 		CallableStatement cstm = null;
 		ResultSet rs = null;
 		String query = "";
-		try {
 			switch (fields) {
 			case "id":
 				if (orders.equals("desc")) {
@@ -294,10 +298,6 @@ public class ArticleDAO {
 			}
 			cstm.close();
 			rs.close();
-		} catch (ClassNotFoundException|SQLException e) {
-			throw e;
-		}
-
 		return articlelsit;
 	}
 
@@ -331,12 +331,30 @@ public class ArticleDAO {
 			return rs.getInt(1);
 		}
 	}
-	/*public int returnLasId(){
-		
-		return 
-	}*/
+
+	public int returnLastId() throws ClassNotFoundException, SQLException {
+		String data = "{call last_record()}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data); ResultSet rs = cstm.executeQuery();) {
+			rs.next();
+			return rs.getInt(1);
+		}
+	}
+
+	public boolean checkExitId(int id) throws ClassNotFoundException,
+			SQLException {
+		String data = "{call bol_search_id(?)}";
+		try (CallableStatement cstm = DatabaseConnection.getConnection()
+				.prepareCall(data)) {
+			cstm.setInt(1, id);
+			ResultSet rs = cstm.executeQuery();
+			rs.next();
+			return rs.getBoolean(1);
+		}
+
+	}
 	/*
 	 * public static void main(String[] args) throws ClassNotFoundException,
-	 * SQLException { new ArticleDAO().returnCountRow(); }
+	 * SQLException { System.out.println(new ArticleDAO().checkExitId(238)); }
 	 */
 }
