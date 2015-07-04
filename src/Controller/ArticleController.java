@@ -6,20 +6,15 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-
-import javax.xml.crypto.Data;
-
-import org.postgresql.core.Logger;
 
 import Model.ArticleDAO;
 import Model.ArticleDTO;
 import Model.UserDAO;
 import View.ArticleView;
 import View.LoginView;
+import View.View;
 import View.validateUserinput;
 
 public class ArticleController {
@@ -130,8 +125,7 @@ public class ArticleController {
 				articleView.viewDetail(articleDao.searchRecord("id",
 						String.valueOf(articleView.viewOneRecord())).get(0));
 				articleView.setArticles(arrayListDao);
-				articleView
-						.getStringKeyboard("Press anykey for Back to home page : ");
+				View.getStringKeyboard("Press anykey for Back to home page : ");
 				break;
 			case "#":
 				numberofpages = articleView.setPageSize();
@@ -166,9 +160,13 @@ public class ArticleController {
 						* articleView.getCurrentPage());
 				break;
 			case "he":
-				articleView.helpOption(help());
+				articleView.helpOption(readFile("help option.txt"));
 				articleView.waiting();
 				break;
+			case "ab":
+				articleView.helpOption(readFile("aboutus.txt"));
+				articleView.waiting();
+				break;			
 			case "e":
 				articleView.alertMessage("System Exited ...");
 				System.exit(0);
@@ -259,8 +257,7 @@ public class ArticleController {
 					}
 				} else {
 					articleView.alertMessage("Invalid Username or Email !!!");
-					String did = articleView
-							.getStringKeyboard("Press E)xit, T)ry again... ");
+					String did = View.getStringKeyboard("Press E)xit, T)ry again... ");
 					if (did.compareToIgnoreCase("y") == 1) {
 						startDefualt();
 					} else {
@@ -290,8 +287,8 @@ public class ArticleController {
 	}
 
 	/* Sarin read hepl option from txtfile help option.txt */
-	public String help() throws IOException {
-		FileInputStream fis = new FileInputStream("help option.txt");
+	public String readFile(String fileName) throws IOException {
+		FileInputStream fis = new FileInputStream(fileName);
 		// Construct BufferedReader from InputStreamReader
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 		String line = "";

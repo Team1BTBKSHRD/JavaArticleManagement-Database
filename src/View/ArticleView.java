@@ -2,16 +2,13 @@ package View;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
-import Controller.ArticleController;
 import Model.ArticleDTO;
 
-public class ArticleView {
+public class ArticleView extends View{
 
 	private char topLeft;
 	private char topRight;
@@ -210,7 +207,7 @@ public class ArticleView {
 		repaginate();
 		drawTable(articles);
 		//return getStringKeyboard("--------->Input Operation : ");
-		return Validate.inputData();
+		return super.inputData();
 	}
 
 	/*
@@ -269,8 +266,8 @@ public class ArticleView {
 	public void menu(int[] maxColumns, int totalLenght) {
 		final String MENU1 = " F) First       | P) Previous | N) Next        |  L) Last       ";
 		final String MENU2 = " H) Home        | G) Goto     | S) Search      |  V) View Detail";
-		final String MENU3 = " A) Add         | R) Remove   | U) Update      |  SS) Sort      \n";
-		final String MENU4 = "                  #) Set Row     | He) Help     | E) Exit               ";
+		final String MENU3 = " A) Add         | R) Remove   | U) Update      |  SS) Sort      ";
+		final String MENU4 = " #) Set Row     | He) Help    | Ab) AboutUs	 |  E) Exit       ";
 		String strMenu = "";
 		strMenu = addHorizontalLine(strMenu, maxColumns, topLeft,
 				horizontalLine, topRight);
@@ -544,58 +541,6 @@ public class ArticleView {
 			}// End switch;
 		} while (true);
 	}// End of add();
-
-	@SuppressWarnings("resource")
-	public String getStringKeyboard(String message) {
-		System.out.println("\n\n\n");
-		Scanner put = new Scanner(System.in);
-		String str = "";
-		while (str.equals("")) {
-			System.out.print(message);
-			str = put.nextLine();
-		}
-		return str;
-	}// End of getStringKeyboard();
-
-	private String currentDate() {
-		return new SimpleDateFormat("dd/MM/YYYY HH:mm:ss").format(new Date());
-	}
-
-	@SuppressWarnings("resource")
-	private String inputContent() {
-		StringBuilder contents = new StringBuilder();
-		try {
-			Scanner put = new Scanner(System.in);
-			while (put.hasNext()) {
-				contents.append(put.next());
-				if (contents.toString().endsWith("...")) {
-					contents.setLength(contents.length() - 3);
-					break;
-				}
-				contents.append("\n");
-			}// End while;
-		} catch (Exception e) {
-			// logfile.writeLogException(e, "inputContent", "Management");
-		}
-		return contents.toString();
-	}// End of inputContent();
-
-	@SuppressWarnings("resource")
-	private int getNumberKeyboard(String message) {
-		Scanner put = new Scanner(System.in);
-		while (true) {
-			System.out.print(message);
-			try {
-				return put.nextInt();
-			} catch (java.util.InputMismatchException e) {
-				System.out
-						.println("Input Mismatch. Please Input Number Again.");
-				// logfile.writeLogException(e, "getNumberKeyboard",
-				// "Management");
-				put.nextLine();
-			}
-		}
-	}
 
 	public int checkUpdate() throws ClassNotFoundException,
 			NullPointerException, SQLException {
