@@ -232,7 +232,7 @@ public class ArticleController {
 		boolean passwordconfirm;
 		try {
 			failaccess++;
-			DatabaseConnection.checkDatabase();
+			DatabaseConnection.createDatabase("db_new_Elit_script.sql");
 			if (failaccess == 4) {
 				System.exit(1);
 			} else {
@@ -243,7 +243,7 @@ public class ArticleController {
 							.viewLoginPassword());
 					if (passwordconfirm) {
 						Controller.Logger.getLogger().writeLogOpenDatabase(
-								DatabaseConnection.getDatabaseName());
+								DatabaseConnection.getDB_NAME());
 						arrayListDao = articleDao.setRow(numberofpages, 0);
 						int totalRecord = articleDao.returnCountRow(); // number
 																		// of
