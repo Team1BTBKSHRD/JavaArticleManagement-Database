@@ -687,7 +687,7 @@ ALTER TABLE public.vw_show_by_id_dsc OWNER TO postgres;
 -- Name: art_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('art_id_seq', 1, true);
+SELECT pg_catalog.setval('art_id_seq', 0, true);
 
 
 --
@@ -701,7 +701,7 @@ SELECT pg_catalog.setval('delete_id_seq', 1, false);
 -- Name: insert_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('insert_id_seq', 1, true);
+SELECT pg_catalog.setval('insert_id_seq', 1, false);
 
 
 --
@@ -709,7 +709,6 @@ SELECT pg_catalog.setval('insert_id_seq', 1, true);
 --
 
 COPY tbarticle (id, author, title, content, published_date) FROM stdin;
-1	345	345	asdfasdf\nasdf\nasdf\n	2015-07-05 01:25:07
 \.
 
 
@@ -726,7 +725,6 @@ COPY tbarticle_audit_on_delete (id, art_id, modified_date) FROM stdin;
 --
 
 COPY tbarticle_audit_on_insert (id, art_id, modified_date) FROM stdin;
-1	1	2015-07-05 01:25:07
 \.
 
 

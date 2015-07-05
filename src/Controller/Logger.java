@@ -1,17 +1,43 @@
 package Controller;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
+
 import View.View;
 
 public class Logger {   
 	private static Logger logger = null;
-	public static String logFileName = "article.log";
-	public static String errorLogFileName = "error.log";
+	public static String logFileName = new File("").getAbsolutePath() + "/Log/article.log";
+	public static String errorLogFileName = new File("").getAbsolutePath() + "/Log/error.log";
 	private Logger() {}
 	public static Logger getLogger() {			
 		if(logger == null)	logger = new Logger();		
 		return logger;		
 	}	
+	public void writeLogCreateNewDatabase(String dbName){
+		try(BufferedWriter output = new BufferedWriter(new FileWriter(logFileName, true)))
+		{	output.write(View.currentDate() + ":\t Create New Database \"" + dbName + "\"");
+			output.write(System.getProperty("line.separator"));			 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public void writeLogRestoreDatabase(String backUpFileName){
+		try(BufferedWriter output = new BufferedWriter(new FileWriter(logFileName, true)))
+		{	output.write(View.currentDate() + ":\t Restore Database from \"" + backUpFileName + "\"");
+			output.write(System.getProperty("line.separator"));			 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public void writeLogBackUpDatabase(String backUpFileName){
+		try(BufferedWriter output = new BufferedWriter(new FileWriter(logFileName, true)))
+		{	output.write(View.currentDate() + ":\t BackUp Database to \"" + backUpFileName + "\"");
+			output.write(System.getProperty("line.separator"));			 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	public void writeLogOpenDatabase(String dbName){
 		try(BufferedWriter output = new BufferedWriter(new FileWriter(logFileName, true)))
 		{	output.write(View.currentDate() + ":\t Open Database Name \"" + dbName + "\"");

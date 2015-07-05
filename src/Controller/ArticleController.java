@@ -9,13 +9,13 @@ import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import View.validateUserInputException;
 import Model.ArticleDAO;
 import Model.ArticleDTO;
 import Model.UserDAO;
 import View.ArticleView;
 import View.LoginView;
 import View.View;
-import View.validateUserinput;
 
 public class ArticleController {
 	private ArticleView articleView = null;
@@ -232,7 +232,7 @@ public class ArticleController {
 		boolean passwordconfirm;
 		try {
 			failaccess++;
-			DatabaseConnection.createDatabase("db_new_Elit_script.sql");
+			DatabaseConnection.createDatabase("default.sql");
 			if (failaccess == 4) {
 				System.exit(1);
 			} else {
@@ -277,7 +277,7 @@ public class ArticleController {
 			Controller.Logger.getLogger().writeLogException(Ioe,
 					"StartDefault", "Controller");
 			startDefualt();
-		} catch (validateUserinput vlduser) {
+		} catch (validateUserInputException vlduser) {
 			Controller.Logger.getLogger()
 					.writeLogException(vlduser,
 							"StartDefault {" + vlduser.getMessage() + "}",
@@ -302,7 +302,6 @@ public class ArticleController {
 
 	public static void main(String[] args) {
 		System.gc();
-		new ArticleController().startDefualt();
-
+		new ArticleController().startDefualt();	
 	}
 }

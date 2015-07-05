@@ -6,13 +6,15 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
+import View.validateUserInputException;
+
 /**
  * contains all helper/util function for view
  * @author lit
  *
  */
 public abstract class View {	
-	public static String inputData() throws validateUserinput{
+	public static String inputData() throws validateUserInputException{
 		String[] c = {"f","p","n","l","a","r","s","u","ss","h","v","g","#","e","b","ab","he"};
 		Set<String> name =new HashSet<String>();
 		for(int i=0;i<c.length;i++){
@@ -27,9 +29,9 @@ public abstract class View {
 				end = new Scanner(System.in).nextLine();
 				end=end.toLowerCase();
 				if(!name.contains(end)){
-					throw new validateUserinput("Error");
+					throw new validateUserInputException("Error");
 				}
-			}catch(validateUserinput e){
+			}catch(validateUserInputException e){
 				 System.err.println("Wrong option, Input again!!!");  
 				 cond=true;
 			}

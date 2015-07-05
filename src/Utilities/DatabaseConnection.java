@@ -1,17 +1,21 @@
 package Utilities;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import Controller.Logger;
+
 /*
  * Utilities
  * -- Database Connection
  * */
 public class DatabaseConnection {
+	private static Logger logger = Logger.getLogger();
 	private static String DRIVER_NAME = "org.postgresql.Driver";
 	private static String URL = "jdbc:postgresql://localhost:";
 	private static String PORT_NUMBER = "5432";
@@ -22,11 +26,10 @@ public class DatabaseConnection {
 	/**
 	 * Deny object initialization
 	 */
-	private DatabaseConnection() {
-	}
+	private DatabaseConnection() {}
 	
 	/**
-	 * connecting to a database
+	 * connect to database
 	 * 
 	 * @return object connection to a database
 	 * @throws SQLException
@@ -39,26 +42,27 @@ public class DatabaseConnection {
 				+ DB_NAME, USER_NAME, PASSWORD);
 		return con;
 	}
-	public static boolean createDatabase(String fileName) throws SQLException, IOException, ClassNotFoundException{
-		if(!checkDatabase()){
-			// DO NOT USE getConnection() in this function
-			// there will be error when there is no database
-			Connection con = DriverManager.getConnection(URL + PORT_NUMBER + "/",
-				USER_NAME, PASSWORD);
-			String sqlScript = "CREATE DATABASE "
-				+ DB_NAME
-				+ "   WITH OWNER "
-				+ USER_NAME
-				+ "    TEMPLATE template0   "
-				+ "ENCODING 'SQL_ASCII'   TABLESPACE  pg_default   LC_COLLATE  'C'   "
-				+ "LC_CTYPE  'C'   CONNECTION LIMIT  -1;";
-			PreparedStatement stm = con.prepareStatement(sqlScript);
-			stm.executeUpdate();
-			stm.close();
-			con.close();
-			return restoreDatabase(fileName);			 
-		}
-		return false;
+	
+	/**
+	 * reset database by dropping table and their sequences
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
+	private static void resetDatabase() throws ClassNotFoundException, SQLException{
+		Connection con = getConnection();
+		PreparedStatement stm = con.prepareStatement("DROP SEQUENCE IF EXISTS \"art_id_seq\" CASCADE; " 
+		+"DROP SEQUENCE IF EXISTS \"delete_id_seq\" CASCADE;" 
+		+"DROP SEQUENCE IF EXISTS \"insert_id_seq\" CASCADE;"
+		+"DROP SEQUENCE IF EXISTS \"update_id_seq\" CASCADE;"
+		+"DROP SEQUENCE IF EXISTS \"user_id_seq\" CASCADE;"
+		+"DROP TABLE IF EXISTS \"tbarticle\" CASCADE;"
+		+"DROP TABLE IF EXISTS \"tbarticle_audit_on_delete\" CASCADE;"
+		+"DROP TABLE IF EXISTS \"tbarticle_audit_on_insert\" CASCADE;"
+		+"DROP TABLE IF EXISTS \"tbarticle_audit_on_update\" CASCADE;" 
+		+"DROP TABLE IF EXISTS \"tbuser\" CASCADE;");
+		stm.execute();	
+		con.close();
+		stm.close();
 	}
 		
 	/**
@@ -82,44 +86,105 @@ public class DatabaseConnection {
 		rs.close();
 		stm.close();
 		con.close();
-		// false => there is no databse => create new database, functions, views
+		// false => there is no database => create new database, functions, views
 		// rs.next is true => database is already exist
 		return hasDB;
 	}
-	public static boolean backUpDatabase() throws IOException{
-		Runtime rt = Runtime.getRuntime();
-		String fileName =  new SimpleDateFormat("ddMMYYYYHHmmss").format(new Date());
-		String[] cmd = {
-			    "pg_dump.exe",
-			    "-f", fileName + ".sql",
-			    "-U", USER_NAME,	  
-			    DB_NAME,
-			};		
-		Process proc = rt.exec(cmd);
-		BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
-		// read any errors from the attempted command
-		if ((stdError.readLine()) != null) {
-		    return false;
-		}			
-		return true;
-	}
-	public static boolean restoreDatabase(String fileName) throws IOException{
-		Runtime rt = Runtime.getRuntime();
-		String[] cmd = {
-			    "psql.exe",
-			    "-f", fileName,
-			    "-U", USER_NAME,	  
-			    DB_NAME,
-			};		
-		Process proc = rt.exec(cmd);
-		BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
-		// read any errors from the attempted command
-		if ((stdError.readLine()) != null) {
-		    return false;
-		}			
-		return true;
+	
+	/**
+	 * create Database then restore it from backup/default.sql if database does not exist
+	 * @param fileName
+	 * @return
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	public static boolean createDatabase(String fileName) throws SQLException, IOException, ClassNotFoundException{
+		try {
+			if(!checkDatabase()){
+				// DO NOT USE getConnection() in this function
+				// there will be error when there is no database
+				Connection con = DriverManager.getConnection(URL + PORT_NUMBER + "/",
+					USER_NAME, PASSWORD);
+				String sqlScript = "CREATE DATABASE "
+					+ DB_NAME
+					+ "   WITH OWNER "
+					+ USER_NAME
+					+ "    TEMPLATE template0   "
+					+ "ENCODING 'SQL_ASCII'   TABLESPACE  pg_default   LC_COLLATE  'C'   "
+					+ "LC_CTYPE  'C'   CONNECTION LIMIT  -1;";
+				PreparedStatement stm = con.prepareStatement(sqlScript);
+				stm.executeUpdate();
+				stm.close();
+				con.close();
+				logger.writeLogCreateNewDatabase(DB_NAME);
+				return restoreDatabase(fileName);			 
+			}
+		} catch (Exception e) {
+			logger.writeLogException(e,"createDatabase", "DatabaseConnection");
+			return false;
+		}
+		return false;
 	}
 	
+	public static boolean backUpDatabase(){
+		try {
+			String fileName =  new SimpleDateFormat("ddMMYYYYHHmmss").format(new Date());
+			File pathToExecutable = new File("postgres/pg_dump.exe");
+			File pathToBackUp = new File("backup/" + fileName + ".sql");
+			ProcessBuilder builder = new ProcessBuilder (
+					pathToExecutable.getAbsolutePath(),
+				    "-f",  pathToBackUp.getAbsolutePath(),
+				    "-U", USER_NAME,	  
+				    DB_NAME
+				);	
+			// this is where you set the root folder for the executable to run with
+			builder = builder.directory( new File("postgres").getAbsoluteFile() ); 
+			builder.redirectErrorStream(true);
+			Process proc = builder.start();
+			logger.writeLogBackUpDatabase(fileName + ".sql");
+			return true;
+		} catch (Exception e) {
+			logger.writeLogException(e,"backUpDatabase", "DatabaseConnection");
+			return false;
+		}				
+	}
+	
+	public static boolean restoreDatabase(String fileName) {
+		File pathToRestore = new File("backup/" + fileName);
+		if(pathToRestore.exists()){
+			try {
+				resetDatabase();				
+				File pathToExecutable = new File("postgres/psql.exe");
+				ProcessBuilder builder = new ProcessBuilder (
+						pathToExecutable.getAbsolutePath(),
+					    "-f",  pathToRestore.getAbsolutePath(),
+					    "-U", USER_NAME,	  
+					    DB_NAME
+					);
+				// this is where you set the root folder for the executable to run with
+				builder = builder.directory( new File("postgres").getAbsoluteFile() ); 
+				Process proc = builder.start();
+				logger.writeLogRestoreDatabase(fileName);
+				return true;
+			} catch (Exception e) {
+				logger.writeLogException(e,"restoreDatabase", "DatabaseConnection");
+				return false;
+			}						
+		}
+		return false;
+	}
+	
+//	public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
+////		  System.out.println(backUpDatabase());
+//		 System.out.println(createDatabase("default.sql"));		
+//		 //System.out.println(restoreDatabaseDefinition("05072015205932.sql"));
+//		//System.out.println(restoreDatabase("default.sql"));
+//		//System.out.println(createDatabase("default.sql"));
+//		//System.out.println(resetDatabase());
+//	}	
+	
+	//###########################################setter&getter#######################################
 	public static String getDRIVER_NAME() {
 		return DRIVER_NAME;
 	}
@@ -167,12 +232,5 @@ public class DatabaseConnection {
 	public static void setPASSWORD(String pASSWORD) {
 		PASSWORD = pASSWORD;
 	}
-//	public static void main(String[] args) throws ClassNotFoundException,
-//	  SQLException, IOException {
-//	  	System.out.println(createDatabase("db_new_Elit_script.sql")); 
-// 
-//		  //System.out.println(backUpDatabase());
-//		//  System.out.println(restoreDatabase("05072015041046.sql"));
-//	}
-	 
+ 
 }

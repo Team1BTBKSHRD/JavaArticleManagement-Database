@@ -2,10 +2,11 @@ package View;
 
 import java.util.InputMismatchException;
 
+
 @SuppressWarnings("serial")
-public class validateUserinput extends InputMismatchException {
+public class validateUserInputException extends InputMismatchException {
 			private String message;
-			public  validateUserinput(String s){
+			public  validateUserInputException(String s){
 				super("Input wrong");
 				this.message=s;
 			}
