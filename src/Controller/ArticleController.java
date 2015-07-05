@@ -45,50 +45,125 @@ public class ArticleController {
 		try {
 			totalRecord = articleDao.returnCountRow();
 			switch (operation.toLowerCase()) {
+			/*
+			 * Operation Insert Data
+			 */
 			case "a":
-				int lastid = articleDao.returnLastId();
-				ArrayList<ArticleDTO> alist = articleView.add();
-				message = String.valueOf(articleDao.insertRecords(alist));
-				totalRecord = articleDao.returnCountRow();
+				int lastid = articleDao.returnLastId(); /*
+														 * return the last id
+														 * from DAO
+														 */
+				ArrayList<ArticleDTO> alist = articleView.add(); /*
+																 * view add()
+																 * and return
+																 * arraylist
+																 */
+				message = String.valueOf(articleDao.insertRecords(alist)); /*
+																			 * message
+																			 * (
+																			 * true
+																			 * )
+																			 * ,
+																			 * Data
+																			 * insert
+																			 * to
+																			 * Db
+																			 */
+				totalRecord = articleDao.returnCountRow(); /*
+															 * number of records
+															 * in Db
+															 */
 				for (ArticleDTO articleDTO : alist) {
 					lastid++;
-					Controller.Logger.getLogger().writeLogAdd(lastid);
+					Controller.Logger.getLogger().writeLogAdd(lastid); /*
+																		 * each
+																		 * id of
+																		 * data
+																		 * insertion
+																		 * ,
+																		 * write
+																		 * to
+																		 * logAdd
+																		 */
 				}
 
 				break;
-
+			/*
+			 * Operation Remove Data
+			 */
 			case "r":
-				int removeid = articleView.removeById();
+				int removeid = articleView.removeById(); /*
+														 * return id from
+														 * viewRemove
+														 */
 				message = String.valueOf(articleDao.removeRecord(removeid))
-						.toLowerCase();
-				if (message.equals("false")) {
+						.toLowerCase(); /* message(true), Data remove in Db */
+				if (message.equals("false")) { /*
+												 * id not found will write to
+												 * LogException
+												 */
 					Controller.Logger.getLogger().writeLogException(
 							new Exception(),
 							"Remove(id " + removeid + "not found)",
 							"Controller");
 				} else {
 					totalRecord = articleDao.returnCountRow();
-					Controller.Logger.getLogger().writeLogDelete(removeid);
+					Controller.Logger.getLogger().writeLogDelete(removeid); /*
+																			 * id
+																			 * removed
+																			 * ,
+																			 * write
+																			 * id
+																			 * to
+																			 * logDeleted
+																			 */
 				}
 
 				break;
+			/*
+			 * Operation Search Data
+			 */
 			case "s":
-				String searchoption = articleView.search();// new
-															// ArticleView().search();
+				String searchoption = articleView.search(); /*
+															 * return string of
+															 * [operation;data]
+															 */
 				String[] parts = searchoption.split(";");
-				String field = parts[0];
-				String key = parts[1];
-				arrayListDao = articleDao.searchRecord(field, key);
-				totalRecord = arrayListDao.size();
+				String field = parts[0];// Operation
+				String key = parts[1];// data
+				arrayListDao = articleDao.searchRecord(field, key); /*
+																	 * searching
+																	 * record
+																	 * (field
+																	 * ,key)
+																	 */
+				totalRecord = arrayListDao.size(); /*
+													 * return number of
+													 * searching data
+													 */
 				break;
+			/*
+			 * Operation Update Data
+			 */
 			case "u":
-				int idex = articleView.checkUpdate();
-				ArticleDTO article = articleView.update(idex);
+				int idex = articleView.checkUpdate(); /*
+													 * return update id from
+													 * viewUpdate
+													 */
+				ArticleDTO article = articleView.update(idex); /*
+																 * set id to
+																 * viewUpdate
+																 * and return
+																 * object
+																 */
 				int articleid = article.getId();
 				String fieldname = null;
 				String author = article.getAuthor();
 				String title = article.getTitle();
 				String content = article.getContent();
+				/*
+				 * action update all fields
+				 */
 				if (author.isEmpty() == false && title.isEmpty() == false
 						&& content.isEmpty() == false) {
 					message = String.valueOf(articleDao.updateRecordAll(
@@ -96,36 +171,66 @@ public class ArticleController {
 					fieldname = "All";
 				} else {
 					if (author.isEmpty() == false) {
+						/*
+						 * action update only author field
+						 */
 						articleDao.updateRecordAuthor(articleid, author);
 						fieldname = author;
 					} else if (title.isEmpty() == false) {
+						/*
+						 * action update only title field
+						 */
 						articleDao.updateRecordTitle(articleid, title);
 						fieldname = title;
 					} else if (content.isEmpty() == false) {
+						/*
+						 * action update only content field
+						 */
 						articleDao.updateRecordContent(articleid, content);
 						fieldname = content;
 					}
-					arrayListDao = articleDao.setRow(5, 0); // totalRecord =
-															// arrayListDao.size();
+					arrayListDao = articleDao.setRow(5, 0);
 					Controller.Logger.getLogger().writeLogUpdate(articleid,
-							fieldname);
+							fieldname);/* write affected id to logUpdate */
 				}
 				break;
-
+			/*
+			 * Operation Sort Data
+			 */
 			case "ss":
-				String sortOption = new ArticleView().sort().toLowerCase();
+				String sortOption = new ArticleView().sort().toLowerCase(); /*
+																			 * return
+																			 * string
+																			 * sortOption
+																			 * (
+																			 * operation
+																			 * ,
+																			 * data
+																			 * )
+																			 */
 				String[] sort = sortOption.split(";");
 				String fields = sort[0];
 				String order = sort[1];
 
-				arrayListDao = articleDao.listSort(fields, order);
+				arrayListDao = articleDao.listSort(fields, order);/*
+																 * return
+																 * arraylist by
+																 * limited
+																 * record
+																 */
 
 				break;
-			case "h":
-
-				arrayListDao = articleDao.setRow(5, 0);
+			/*
+			 * operation goto Homepage
+			 */
+			case "h":				
+				arrayListDao = articleDao.setRow(5, 0); /* set limited record for display */
 
 				break;
+			/*
+			 * operation viewDetails
+			 * 
+			 * */
 			case "v":
 				articleView.viewDetail(articleDao.searchRecord("id",
 						String.valueOf(articleView.viewOneRecord())).get(0));

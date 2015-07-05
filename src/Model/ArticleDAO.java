@@ -6,14 +6,8 @@ import java.util.ArrayList;
 import Utilities.DatabaseConnection;
 
 public class ArticleDAO {
-	private Exception messageerror = null;
 	private ArrayList<ArticleDTO> articlelsit = null;
 	public static String lenghtId = "";
-
-	public Exception getMessageError() {
-		return messageerror;
-	}
-
 	public boolean insertRecords(ArrayList<ArticleDTO> arraylist)
 			throws ClassNotFoundException, SQLException {
 		String stm = "{call add_article(?,?,?)}";
