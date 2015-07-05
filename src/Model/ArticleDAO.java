@@ -23,6 +23,7 @@ public class ArticleDAO {
 				cstm.setString(1, articleDTO.getAuthor());
 				cstm.setString(2, articleDTO.getTitle());
 				cstm.setString(3, articleDTO.getContent());
+				//cstm.setString(3, "Hello world");
 				cstm.execute();
 				lenghtId += returnLastId() + ";";
 			}
@@ -34,9 +35,9 @@ public class ArticleDAO {
 			SQLException {
 		String data = "{call delete_article(?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
-				.prepareCall(data); ResultSet rs = cstm.executeQuery();) {
+				.prepareCall(data);) {
 			cstm.setInt(1, key);
-
+			ResultSet rs = cstm.executeQuery();
 			rs.next();
 			return rs.getBoolean(1);
 		}
@@ -107,7 +108,6 @@ public class ArticleDAO {
 			return rs.getBoolean(1);
 		}
 	}
-
 	public ArrayList<ArticleDTO> searchRecord(String operation, String fields)
 			throws SQLException, ClassNotFoundException, NullPointerException {
 		CallableStatement cstm = null;
@@ -163,6 +163,75 @@ public class ArticleDAO {
 							.getString("author"), rs.getString("title"), rs
 							.getString("content"), rs.getDate("published_date")
 							.toString()));
+				}
+				break;
+			}
+			cstm.close();
+			rs.close();
+			return articlelsit;
+		
+	}
+
+	public ArrayList<ArticleDTO> searchRecord(String operation, String fields, int rows, int pages)
+			throws SQLException, ClassNotFoundException, NullPointerException {
+		CallableStatement cstm = null;
+		articlelsit = new ArrayList<ArticleDTO>();
+		ResultSet rs = null;
+			switch (operation.toLowerCase()) {
+			case "author":
+				String author = "{call search_by_author(?,?,?)}";
+				cstm = DatabaseConnection.getConnection().prepareCall(author);
+				cstm.setString(1, fields);
+				cstm.setInt(2, rows);
+				cstm.setInt(3, pages);
+				rs = cstm.executeQuery();
+
+				while (rs.next()) {
+					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+							.getString("author"), rs.getString("title"), rs
+							.getString("content"), rs.getString("published_date")));
+				}
+				break;
+			case "title":
+				String title = "{call search_by_title(?,?,?)}";
+				cstm = DatabaseConnection.getConnection().prepareCall(title);
+				cstm.setString(1, fields);
+				cstm.setInt(2, rows);
+				cstm.setInt(3, pages);
+				rs = cstm.executeQuery();
+				while (rs.next()) {
+					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+							.getString("author"), rs.getString("title"), rs
+							.getString("content"), rs.getString("published_date")));
+				}
+
+				break;
+			case "content":
+				String content = "{call search_by_content(?,?,?)}";
+				cstm = DatabaseConnection.getConnection().prepareCall(content);
+				cstm.setString(1, fields);
+				cstm.setInt(2, rows);
+				cstm.setInt(3, pages);
+				rs = cstm.executeQuery();
+				while (rs.next()) {
+					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+							.getString("author"), rs.getString("title"), rs
+							.getString("content"), rs.getString("published_date")));
+				}
+				
+
+				break;
+			case "id":
+				String id = "{call search_by_id(?,?,?)}";
+				cstm = DatabaseConnection.getConnection().prepareCall(id);
+				cstm.setInt(1, Integer.parseInt(fields));
+				cstm.setInt(2, rows);
+				cstm.setInt(3, pages);
+				rs = cstm.executeQuery();
+				if (rs.next()) {
+					articlelsit.add(new ArticleDTO(rs.getInt("id"), rs
+							.getString("author"), rs.getString("title"), rs
+							.getString("content"), rs.getString("published_date")));
 				}
 				break;
 			}
@@ -307,7 +376,6 @@ public class ArticleDAO {
 		String data = "{call set_row(?,?)}";
 		try (CallableStatement cstm = DatabaseConnection.getConnection()
 				.prepareCall(data);) {
-
 			cstm.setInt(1, row);
 			cstm.setInt(2, page);
 			ResultSet rs = cstm.executeQuery();
@@ -357,4 +425,6 @@ public class ArticleDAO {
 	 * public static void main(String[] args) throws ClassNotFoundException,
 	 * SQLException { System.out.println(new ArticleDAO().checkExitId(238)); }
 	 */
+
+	
 }

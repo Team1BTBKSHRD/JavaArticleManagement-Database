@@ -233,7 +233,7 @@ $BODY$
 CREATE OR REPLACE FUNCTION "next_page"(r int4, o int4)
   RETURNS SETOF "public"."tbarticle" AS $BODY$
 
-SELECT * FROM tbarticle LIMIT r OFFSET o;
+SELECT * FROM tbarticle LIMIT $1 OFFSET $2;
 -- RETURN $add;
 
 $BODY$
@@ -250,8 +250,8 @@ CREATE OR REPLACE FUNCTION "search_by_author"(au varchar)
 FROM
 	tbarticle
 WHERE
-	author LIKE UPPER (au) || '%'
-OR author LIKE "lower" (au) || '%'
+	author LIKE UPPER ($1) || '%'
+OR author LIKE "lower" ($1) || '%'
 ORDER BY
 	ID ASC ; -- RETURN $add;
 	$BODY$
@@ -268,8 +268,8 @@ CREATE OR REPLACE FUNCTION "search_by_content"(con varchar)
 FROM
 	tbarticle
 WHERE
-	CONTENT LIKE '%' || "upper" (con) || '%'
-OR CONTENT LIKE '%' || "upper" (con) || '%'
+	CONTENT LIKE '%' || "upper" ($1) || '%'
+OR CONTENT LIKE '%' || "upper" ($1) || '%'
 ORDER BY
 	ID ASC ; -- RETURN $add;
 	$BODY$
@@ -288,8 +288,8 @@ SELECT
 FROM
 	tbarticle
 WHERE
-	title LIKE "upper" (ti) || '%'
-OR title LIKE "lower" (ti) || '%'
+	title LIKE "upper" ($1) || '%'
+OR title LIKE "lower" ($1) || '%'
 ORDER BY
 	ID ASC ;
 -- RETURN $add;
@@ -305,7 +305,7 @@ $BODY$
 CREATE OR REPLACE FUNCTION "search_id"(i int4)
   RETURNS SETOF "public"."tbarticle" AS $BODY$
 
-SELECT * FROM tbarticle WHERE id=i;
+SELECT * FROM tbarticle WHERE id=$1;
 -- RETURN $add;
 
 $BODY$
@@ -319,7 +319,7 @@ $BODY$
 CREATE OR REPLACE FUNCTION "set_row"(r int4)
   RETURNS SETOF "public"."tbarticle" AS $BODY$
 
-SELECT * FROM tbarticle LIMIT r;
+SELECT * FROM tbarticle LIMIT $1;
 -- RETURN $add;
 
 $BODY$
@@ -333,7 +333,7 @@ $BODY$
 CREATE OR REPLACE FUNCTION "set_row"(ro int4, pa int4)
   RETURNS SETOF "public"."tbarticle" AS $BODY$
 
-SELECT * FROM tbarticle ORDER BY "id" ASC LIMIT ro OFFSET pa;
+SELECT * FROM tbarticle ORDER BY "id" ASC LIMIT $1 OFFSET $2;
 -- RETURN $add;
 
 $BODY$
@@ -598,6 +598,146 @@ BEGIN
 END
 $$ LANGUAGE plpgsql; 
 
+-------------------------------------------------------------------------------
+-- Function: search_by_author(text, integer, integer)
 
- 
+-- DROP FUNCTION search_by_author(text, integer, integer);
+
+CREATE OR REPLACE FUNCTION search_by_author(au text, ro integer, of integer)
+  RETURNS SETOF tbarticle AS
+$BODY$ 
+SELECT
+	*
+FROM
+	tbarticle
+WHERE
+	author LIKE UPPER ($1) || '%'
+OR author LIKE "lower" ($1) || '%'
+ORDER BY
+	ID ASC LIMIT $2 OFFSET $3 ; -- RETURN $add;
+	$BODY$
+  LANGUAGE sql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION search_by_author(text, integer, integer)
+  OWNER TO postgres;
+---------------------------------------------------------------------------------
+-- Function: search_by_content(text, integer, integer)
+
+-- DROP FUNCTION search_by_content(text, integer, integer);
+
+CREATE OR REPLACE FUNCTION search_by_content(con text, ro integer, of integer)
+  RETURNS SETOF tbarticle AS
+$BODY$ 
+SELECT
+	*
+FROM
+	tbarticle
+WHERE
+	CONTENT LIKE '%' || "upper" ($1) || '%'
+OR CONTENT LIKE '%' || "upper" ($1) || '%'
+ORDER BY
+	ID ASC LIMIT $2 OFFSET $3; -- RETURN $add;
+	$BODY$
+  LANGUAGE sql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION search_by_content(text, integer, integer)
+  OWNER TO postgres;
+---------------------------------------------------------------------------------
+-- Function: search_by_title(text, integer, integer)
+
+-- DROP FUNCTION search_by_title(text, integer, integer);
+
+CREATE OR REPLACE FUNCTION search_by_title(ti text, ro integer, of integer)
+  RETURNS SETOF tbarticle AS
+$BODY$
+
+SELECT
+	*
+FROM
+	tbarticle
+WHERE
+	title LIKE "upper" ($1) || '%'
+OR title LIKE "lower" ($1) || '%'
+ORDER BY
+	ID ASC LIMIT $2 OFFSET $3;
+-- RETURN $add;
+
+$BODY$
+  LANGUAGE sql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION search_by_title(text, integer, integer)
+  OWNER TO postgres;
+---------------------------------------------------------------------------------------
+-- Function: sort_title(integer, boolean)
+
+-- DROP FUNCTION sort_title(integer, boolean);
+
+CREATE OR REPLACE FUNCTION sort_title(r integer, isasc boolean)
+  RETURNS SETOF tbarticle AS
+$BODY$ 
+BEGIN 
+IF isAsc = TRUE THEN 
+RETURN QUERY 
+	SELECT * FROM tbarticle ORDER BY title ASC LIMIT r; 
+ELSE 
+RETURN QUERY 
+	SELECT * FROM tbarticle ORDER BY title DESC LIMIT r;
+END IF; 
+END $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION sort_title(integer, boolean)
+  OWNER TO postgres;
+-------------------------------------------------------------------------------------------
+-- Function: sort_id(integer, boolean)
+
+-- DROP FUNCTION sort_id(integer, boolean);
+
+CREATE OR REPLACE FUNCTION sort_id(r integer, isasc boolean)
+  RETURNS SETOF tbarticle AS
+$BODY$ 
+BEGIN 
+IF isAsc = TRUE THEN
+	RETURN QUERY 
+	SELECT * FROM tbarticle ORDER BY id ASC LIMIT r; 
+ELSE 
+	RETURN QUERY
+	SELECT * FROM tbarticle ORDER BY id DESC LIMIT r; 
+END IF; 
+END $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION sort_id(integer, boolean)
+  OWNER TO postgres;
+---------------------------------------------------------------------------------------------
+-- Function: sort_title(integer, boolean)
+
+-- DROP FUNCTION sort_title(integer, boolean);
+
+CREATE OR REPLACE FUNCTION sort_title(r integer, isasc boolean)
+  RETURNS SETOF tbarticle AS
+$BODY$ 
+BEGIN 
+IF isAsc = TRUE THEN 
+RETURN QUERY 
+	SELECT * FROM tbarticle ORDER BY title ASC LIMIT r; 
+ELSE 
+RETURN QUERY 
+	SELECT * FROM tbarticle ORDER BY title DESC LIMIT r;
+END IF; 
+END $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION sort_title(integer, boolean)
+  OWNER TO postgres;
+-------------------------------------------------------------------------------------------
+
+
+
 
