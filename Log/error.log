@@ -214,3 +214,5 @@
 06/07/2015 15:21:48:	org.postgresql.util.PSQLException: ResultSet not positioned properly, perhaps you need to call next. in METHOD "StartDefault" CLASS "Controller"
 06/07/2015 15:28:57:	org.postgresql.util.PSQLException: ERROR: relation "tbuser" does not exist
   Position: 16 in METHOD "StartDefault" CLASS "Controller"
+06/07/2015 15:54:12:	org.postgresql.util.PSQLException: ERROR: relation "tbuser" does not exist
+  Position: 16 in METHOD "StartDefault" CLASS "Controller"
