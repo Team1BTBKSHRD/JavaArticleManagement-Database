@@ -2,7 +2,9 @@ package View;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 /**
  * contains all helper/util function for view
@@ -10,6 +12,30 @@ import java.util.Scanner;
  *
  */
 public class UtilView {	
+	public static String inputData() throws validateUserinput{
+		String[] c = {"f","p","n","l","a","r","s","u","ss","h","v","g","#","e","b","he","ab"};
+		Set<String> name =new HashSet<String>();
+		for(int i=0;i<c.length;i++){
+			name.add(c[i]);
+		}
+		boolean cond = true;
+		String end="";
+		while(cond) {
+			cond=false;
+			try{
+				System.out.print("----> Input Option : ");
+				end = new Scanner(System.in).nextLine().trim();
+				end=end.toLowerCase();
+				if(!name.contains(end)){
+					throw new validateUserinput("Error");
+				}
+			}catch(validateUserinput e){
+				 System.err.println("Wrong option, Input again!!!");  
+				 cond=true;
+			}
+		} 
+		return end ;
+	}
 	/**
 	 * get String from input keyboard
 	 * @param message : message to show on console screen

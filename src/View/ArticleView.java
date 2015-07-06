@@ -2,17 +2,14 @@ package View;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
-import Controller.ArticleController;
 import Model.ArticleDTO;
 
 public class ArticleView {
-
+	private String messageTable;
 	private char topLeft;
 	private char topRight;
 
@@ -41,12 +38,10 @@ public class ArticleView {
 	public int getCurrentPage() {
 		return currentPage;
 	}
-
 	public void setTotalRecord(int totalRecord) {
 		this.totalRecord = totalRecord;
 		repaginate();
 	}
-
 	/*
 	 * Method setPageSize() Use for set number of record for view pageSize
 	 * parameter is a number of record that we want to view
@@ -56,9 +51,13 @@ public class ArticleView {
 	}
 
 	public int setPageSize() {
-		pageSize = getNumberKeyboard("Input Page Size: ");
+		pageSize = UtilView.getNumberKeyboard("Input Page Size: ");
 		repaginate(); /* After set a new value we need to repaginate */
 		return pageSize;
+	}
+	public void setPageSize(int rows) {
+		pageSize = rows;
+		repaginate(); /* After set a new value we need to repaginate */
 	}
 
 	/*
@@ -73,7 +72,7 @@ public class ArticleView {
 	 * pageNumbe parameter is a number of page
 	 */
 	public void gotoPage() {
-		int pageNumber = getNumberKeyboard("Input Page: ");
+		int pageNumber = UtilView.getNumberKeyboard("Input Page: ");
 		currentPage = pageNumber - 1; /* currentPage value started from 0 */
 		if (currentPage < 0) { /* Goto first page if current page < 0 */
 			gotoFirstPage();
@@ -92,7 +91,7 @@ public class ArticleView {
 	 * default table style and regainate page again
 	 */
 	public ArticleView() {
-
+		messageTable = "Message: ";
 		currentPage = 0;
 		pageSize = 5;
 		articles = new ArrayList<ArticleDTO>();
@@ -209,8 +208,8 @@ public class ArticleView {
 	public String process() {
 		repaginate();
 		drawTable(articles);
-		//return getStringKeyboard("--------->Input Operation : ");
-		return Validate.inputData();
+		//return UtilView.getStringKeyboard("--------->Input Operation : ");
+		return UtilView.inputData();
 	}
 
 	/*
@@ -269,8 +268,9 @@ public class ArticleView {
 	public void menu(int[] maxColumns, int totalLenght) {
 		final String MENU1 = " F) First       | P) Previous | N) Next        |  L) Last       ";
 		final String MENU2 = " H) Home        | G) Goto     | S) Search      |  V) View Detail";
-		final String MENU3 = " A) Add         | R) Remove   | U) Update      |  SS) Sort      \n";
-		final String MENU4 = "                  #) Set Row     | He) Help     | E) Exit               ";
+		final String MENU3 = " A) Add         | R) Remove   | U) Update      |  SS) Sort      ";
+		final String MENU4 = "       | B) BackUp   | RE) Restore     				  \n";
+		final String MENU5 = " #) Set Row     | HE) Help    | AB) AboutUs    | E) Exit        ";
 		String strMenu = "";
 		strMenu = addHorizontalLine(strMenu, maxColumns, topLeft,
 				horizontalLine, topRight);
@@ -294,11 +294,18 @@ public class ArticleView {
 		strMenu = addLetter(strMenu, ' ', (totalLenght - MENU3.length()) / 2);
 		strMenu += MENU3;
 		strMenu = addLetter(strMenu, ' ',
-				totalLenght - ((totalLenght - MENU3.length())));
+				totalLenght - ((totalLenght - MENU4.length())));
 		// strMenu = addLetter(strMenu, verticalLine, 1) + "\n";
 		strMenu += "\n";
-		strMenu = addLetter(strMenu, ' ', (totalLenght - MENU4.length()) / 2);
-		strMenu += MENU4;
+		//strMenu = addLetter(strMenu, ' ', (totalLenght - MENU4.length()) / 2);
+		//strMenu += MENU4;
+		//strMenu = addLetter(strMenu, ' ',
+				//totalLenght - ((totalLenght - MENU4.length())));
+
+		strMenu += "\n";
+		
+		strMenu = addLetter(strMenu, ' ', (totalLenght - MENU5.length()) / 2);
+		strMenu += MENU5;
 		strMenu = addLetter(strMenu, ' ',
 				totalLenght - ((totalLenght - MENU4.length())));
 
@@ -495,6 +502,8 @@ public class ArticleView {
 																				 * total
 																				 * pages
 																				 */
+		System.out.println(messageTable);
+		messageTable = "Message: ";
 		System.out.println();
 		// Menu bar;
 		menu(maxColumns, totalLenght); /* Output Menu Bar */
@@ -504,14 +513,29 @@ public class ArticleView {
 	 * viewOneRecord
 	 */
 	public int viewOneRecord() {
-		return getNumberKeyboard("Please input id : ");
+		return UtilView.getNumberKeyboard("Please input id : ");
 	}
 
 	public void viewDetail(ArticleDTO article){
+		int rangeLimit = 10;
+		int word = 0;
+		char[] content = (article.getContent()).toCharArray();
+		StringBuilder contents = new StringBuilder();
 		System.out.println("ID: " + article.getId());
 		System.out.println("Author: " + article.getAuthor());
 		System.out.println("Title: " + article.getTitle());
-		System.out.println("Content: " + article.getContent());
+		//System.out.println("Content: " + article.getContent());
+		for(int i=0; i < content.length;i++){
+				contents.append(content[i]);
+				if(content[i] == ' '){
+					word++;
+					if(word == rangeLimit){
+						contents.append(" ");
+						word=0;
+					}
+				}
+		}
+		System.out.println("content: \n"+ contents.toString().trim());
 		System.out.println("Publish Date: " + article.getPublishDate());
 		System.out.println("\n\n");
 	}
@@ -524,16 +548,14 @@ public class ArticleView {
 		String content;
 		ArrayList<ArticleDTO> articles = new ArrayList<ArticleDTO>();
 		do {
-			author = getStringKeyboard("Please Enter Author : ");
-			title = getStringKeyboard("Please Enter Title : ");
+			author = UtilView.getStringKeyboard("Please Enter Author : ");
+			title = UtilView.getStringKeyboard("Please Enter Title : ");
 			System.out.println("Type 3 periods (...) to stop");
 			System.out.print("Please Enter Content: ");
-			content = inputContent();
-
+			content = UtilView.inputContent();
 			articles.add(new ArticleDTO(1, author, title, content,
-					currentDate()));
+					UtilView.currentDate()));
 			// logfile.writeLogAdd(newArticle);
-
 			System.out.print("Do you want to continues?(Y/N)");
 			String confirm = input.next();
 			switch (confirm.toLowerCase()) {
@@ -545,62 +567,10 @@ public class ArticleView {
 		} while (true);
 	}// End of add();
 
-	@SuppressWarnings("resource")
-	public String getStringKeyboard(String message) {
-		System.out.println("\n\n\n");
-		Scanner put = new Scanner(System.in);
-		String str = "";
-		while (str.equals("")) {
-			System.out.print(message);
-			str = put.nextLine();
-		}
-		return str;
-	}// End of getStringKeyboard();
-
-	private String currentDate() {
-		return new SimpleDateFormat("dd/MM/YYYY HH:mm:ss").format(new Date());
-	}
-
-	@SuppressWarnings("resource")
-	private String inputContent() {
-		StringBuilder contents = new StringBuilder();
-		try {
-			Scanner put = new Scanner(System.in);
-			while (put.hasNext()) {
-				contents.append(put.next());
-				if (contents.toString().endsWith("...")) {
-					contents.setLength(contents.length() - 3);
-					break;
-				}
-				contents.append("\n");
-			}// End while;
-		} catch (Exception e) {
-			// logfile.writeLogException(e, "inputContent", "Management");
-		}
-		return contents.toString();
-	}// End of inputContent();
-
-	@SuppressWarnings("resource")
-	private int getNumberKeyboard(String message) {
-		Scanner put = new Scanner(System.in);
-		while (true) {
-			System.out.print(message);
-			try {
-				return put.nextInt();
-			} catch (java.util.InputMismatchException e) {
-				System.out
-						.println("Input Mismatch. Please Input Number Again.");
-				// logfile.writeLogException(e, "getNumberKeyboard",
-				// "Management");
-				put.nextLine();
-			}
-		}
-	}
-
 	public int checkUpdate() throws ClassNotFoundException,
 			NullPointerException, SQLException {
 		return existId=Integer
-				.parseInt(getStringKeyboard("Please, input ID for update: "));
+				.parseInt(UtilView.getStringKeyboard("Please, input ID for update: "));
 	}
 
 	public ArticleDTO update(int check) throws ClassNotFoundException,
@@ -611,23 +581,23 @@ public class ArticleView {
 		String option = "";
 		// System.out.println(id);
 		if (check>0) {
-			option = getStringKeyboard("Update : Au) Author | T) Title) | C) Content | Al) All: ");
+			option = UtilView.getStringKeyboard("Update : Au) Author | T) Title) | C) Content | Al) All: ");
 			switch (option.toLowerCase()) {
 			case "au": // Updating Author by ID
-				author = getStringKeyboard("Please Input Author : ");
+				author = UtilView.getStringKeyboard("Please Input Author : ");
 				break;
 			case "t": // Updating Title by ID
-				title = getStringKeyboard("Please Input Title : ");
+				title = UtilView.getStringKeyboard("Please Input Title : ");
 				break;
 			case "c": // Updating Content by ID
 				System.out.print("Input Content : ");
-				content = inputContent();
+				content = UtilView.inputContent();
 				break;
 			case "al": // Updating All Fields by ID
-				author = getStringKeyboard("Please Input Author : ");
-				title = getStringKeyboard("Please Input Title : ");
+				author = UtilView.getStringKeyboard("Please Input Author : ");
+				title = UtilView.getStringKeyboard("Please Input Title : ");
 				System.out.print("Please input Content: ");
-				content = inputContent();
+				content = UtilView.inputContent();
 				break;
 			default: // Not Permit invalid Key
 				System.err.println("Invalid");
@@ -645,21 +615,21 @@ public class ArticleView {
 
 	/*
 	 * public ArticleDTO update() { try { int id =
-	 * getNumberKeyboard("Input ID for update: ");
+	 * UtilView.getNumberKeyboard("Input ID for update: ");
 	 * 
 	 * String author = null; String title = null; String content = null; String
 	 * option = "";
 	 * 
 	 * option =
-	 * getStringKeyboard("Update : Au) Author | T) Title) | C) Content | Al) All: "
+	 * UtilView.getStringKeyboard("Update : Au) Author | T) Title) | C) Content | Al) All: "
 	 * ); switch (option.toLowerCase()) { case "au": Updating Author by ID
-	 * author = getStringKeyboard("Please input Author : "); break; case "t":
-	 * Updating Title by ID title = getStringKeyboard("Please input Title : ");
+	 * author = UtilView.getStringKeyboard("Please input Author : "); break; case "t":
+	 * Updating Title by ID title = UtilView.getStringKeyboard("Please input Title : ");
 	 * break; case "c": Updating Content by ID
 	 * System.out.print("Input content : "); content = inputContent(); break;
 	 * case "al": Updating All Fields by ID author =
-	 * getStringKeyboard("Please input author : "); title =
-	 * getStringKeyboard("Please input title : ");
+	 * UtilView.getStringKeyboard("Please input author : "); title =
+	 * UtilView.getStringKeyboard("Please input title : ");
 	 * System.out.print("Please input content: "); content = inputContent();
 	 * break; default: Not Permit invalid Key System.err.println("Invalid");
 	 * waiting(); break; }// End of switch;
@@ -671,8 +641,8 @@ public class ArticleView {
 	 */
 	public String search() {
 		String searchOption;
-		String searchBy = getStringKeyboard("I) ID | Au)Author | T)Title | P)Publish Date--> ");
-		String key = getStringKeyboard("Input key for search: ");
+		String searchBy = UtilView.getStringKeyboard("I) ID | Au)Author | T)Title | P)Publish Date--> ");
+		String key = UtilView.getStringKeyboard("Input key for search: ");
 		switch (searchBy.toLowerCase()) {
 		case "i": // search ID
 			searchOption = "id;" + key;
@@ -695,7 +665,7 @@ public class ArticleView {
 	}// End of search();
 
 	public String sort() {
-		String sortBy = getStringKeyboard("Sort By: I) ID | Au) Author | T) Title  --> ");
+		String sortBy = UtilView.getStringKeyboard("Sort By: I) ID | Au) Author | T) Title  --> ");
 		String sortOption;
 		switch (sortBy.toLowerCase()) {
 		case "i": // sort ID
@@ -713,7 +683,7 @@ public class ArticleView {
 		default:
 			return "id;DESC";
 		}
-		String orderBy = getStringKeyboard("Order By: ASC or DESC --> ");
+		String orderBy = UtilView.getStringKeyboard("Order By: ASC or DESC --> ");
 		if (orderBy.equalsIgnoreCase("asc"))
 			sortOption += "ASC";
 		else
@@ -722,7 +692,7 @@ public class ArticleView {
 	}
 
 	public int removeById() {
-		return getNumberKeyboard("Please, input ID for remove");
+		return UtilView.getNumberKeyboard("Input ID for remove : ");
 	}
 
 	public void waiting() {
@@ -732,7 +702,11 @@ public class ArticleView {
 		} catch (Exception e) {
 		}
 	}
+	public void setMessageTable(String message){
+		this.messageTable += message;
+	}
 	public void alertMessage(String message){
+		System.out.println();
 		System.out.println(message);
 	}
 	/*Help  Option sarin call funciton help from Controller*/

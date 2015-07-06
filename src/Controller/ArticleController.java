@@ -6,20 +6,15 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-
-import javax.xml.crypto.Data;
-
-import org.postgresql.core.Logger;
 
 import Model.ArticleDAO;
 import Model.ArticleDTO;
 import Model.UserDAO;
 import View.ArticleView;
 import View.LoginView;
+import View.UtilView;
 import View.validateUserinput;
 
 public class ArticleController {
@@ -29,141 +24,83 @@ public class ArticleController {
 	private String message;
 	private static int numberofpages = 5; // amount of pages
 	private int failaccess = 0;
+	private String passing;
+	private int totalRecord;
+	private String field;
+	private String key;
+	private String fields;
+	private String order;
 
 	public String getMessage() {
 		return message;
 	}
 
-	public ArticleController() {
+	public void setPassing(String passing) {
+		this.passing = passing;
+	}
+
+	public ArticleController() throws ClassNotFoundException, SQLException {
 		articleView = new ArticleView();
 		articleDao = new ArticleDAO();
 	}
 
 	@SuppressWarnings("unused")
 	public void controllerAction(String operation) {
-		int totalRecord = 0;
 		try {
-			totalRecord = articleDao.returnCountRow();
 			switch (operation.toLowerCase()) {
-			/*
-			 * Operation Insert Data
-			 */
 			case "a":
-				int lastid = articleDao.returnLastId(); /*
-														 * return the last id
-														 * from DAO
-														 */
-				ArrayList<ArticleDTO> alist = articleView.add(); /*
-																 * view add()
-																 * and return
-																 * arraylist
-																 */
-				message = String.valueOf(articleDao.insertRecords(alist)); /*
-																			 * message
-																			 * (
-																			 * true
-																			 * )
-																			 * ,
-																			 * Data
-																			 * insert
-																			 * to
-																			 * Db
-																			 */
-				totalRecord = articleDao.returnCountRow(); /*
-															 * number of records
-															 * in Db
-															 */
+				int lastid = articleDao.returnLastId();
+				ArrayList<ArticleDTO> alist = articleView.add();
+				message = String.valueOf(articleDao.insertRecords(alist));
+				totalRecord = articleDao.returnCountRow();
 				for (ArticleDTO articleDTO : alist) {
 					lastid++;
-					Controller.Logger.getLogger().writeLogAdd(lastid); /*
-																		 * each
-																		 * id of
-																		 * data
-																		 * insertion
-																		 * ,
-																		 * write
-																		 * to
-																		 * logAdd
-																		 */
+					Controller.Logger.getLogger().writeLogAdd(lastid);
 				}
-
+				arrayListDao = articleDao.setRow(articleView.getPageSize(), 0);
 				break;
-			/*
-			 * Operation Remove Data
-			 */
+
 			case "r":
-				int removeid = articleView.removeById(); /*
-														 * return id from
-														 * viewRemove
-														 */
+				int removeid = articleView.removeById();
 				message = String.valueOf(articleDao.removeRecord(removeid))
-						.toLowerCase(); /* message(true), Data remove in Db */
-				if (message.equals("false")) { /*
-												 * id not found will write to
-												 * LogException
-												 */
+						.toLowerCase();
+				if (message.equals("false")) {
 					Controller.Logger.getLogger().writeLogException(
 							new Exception(),
 							"Remove(id " + removeid + "not found)",
 							"Controller");
 				} else {
 					totalRecord = articleDao.returnCountRow();
-					Controller.Logger.getLogger().writeLogDelete(removeid); /*
-																			 * id
-																			 * removed
-																			 * ,
-																			 * write
-																			 * id
-																			 * to
-																			 * logDeleted
-																			 */
+					Controller.Logger.getLogger().writeLogDelete(removeid);
 				}
-
+				arrayListDao = articleDao.setRow(articleView.getPageSize(), 0);
 				break;
-			/*
-			 * Operation Search Data
-			 */
 			case "s":
-				String searchoption = articleView.search(); /*
-															 * return string of
-															 * [operation;data]
-															 */
+				articleView.gotoFirstPage();
+				String searchoption = articleView.search();// new
+															// ArticleView().search();
 				String[] parts = searchoption.split(";");
-				String field = parts[0];// Operation
-				String key = parts[1];// data
-				arrayListDao = articleDao.searchRecord(field, key); /*
-																	 * searching
-																	 * record
-																	 * (field
-																	 * ,key)
-																	 */
-				totalRecord = arrayListDao.size(); /*
-													 * return number of
-													 * searching data
-													 */
+				field = parts[0];
+				key = parts[1];
+				arrayListDao = articleDao.searchRecord(field, key,
+						numberofpages,
+						numberofpages * articleView.getCurrentPage());
+				totalRecord = articleDao.searchRecord(field, key).size(); // get
+																			// total
+																			// records
+																			// founded
+				articleView.setTotalRecord(totalRecord);
+				articleView.setArticles(arrayListDao);
+				passing = "searching";
 				break;
-			/*
-			 * Operation Update Data
-			 */
 			case "u":
-				int idex = articleView.checkUpdate(); /*
-													 * return update id from
-													 * viewUpdate
-													 */
-				ArticleDTO article = articleView.update(idex); /*
-																 * set id to
-																 * viewUpdate
-																 * and return
-																 * object
-																 */
+				int idex = articleView.checkUpdate();
+				ArticleDTO article = articleView.update(idex);
 				int articleid = article.getId();
 				String fieldname = null;
 				String author = article.getAuthor();
 				String title = article.getTitle();
 				String content = article.getContent();
-				/*
-				 * action update all fields
-				 */
 				if (author.isEmpty() == false && title.isEmpty() == false
 						&& content.isEmpty() == false) {
 					message = String.valueOf(articleDao.updateRecordAll(
@@ -171,72 +108,62 @@ public class ArticleController {
 					fieldname = "All";
 				} else {
 					if (author.isEmpty() == false) {
-						/*
-						 * action update only author field
-						 */
 						articleDao.updateRecordAuthor(articleid, author);
 						fieldname = author;
 					} else if (title.isEmpty() == false) {
-						/*
-						 * action update only title field
-						 */
 						articleDao.updateRecordTitle(articleid, title);
 						fieldname = title;
 					} else if (content.isEmpty() == false) {
-						/*
-						 * action update only content field
-						 */
 						articleDao.updateRecordContent(articleid, content);
 						fieldname = content;
 					}
-					arrayListDao = articleDao.setRow(5, 0);
+					arrayListDao = articleDao.setRow(5, 0); // totalRecord =
+															// arrayListDao.size();
 					Controller.Logger.getLogger().writeLogUpdate(articleid,
-							fieldname);/* write affected id to logUpdate */
+							fieldname);
 				}
+				arrayListDao = articleDao.setRow(articleView.getPageSize(), 0);
 				break;
-			/*
-			 * Operation Sort Data
-			 */
+
 			case "ss":
-				String sortOption = new ArticleView().sort().toLowerCase(); /*
-																			 * return
-																			 * string
-																			 * sortOption
-																			 * (
-																			 * operation
-																			 * ,
-																			 * data
-																			 * )
-																			 */
+				String sortOption = new ArticleView().sort().toLowerCase();
 				String[] sort = sortOption.split(";");
-				String fields = sort[0];
-				String order = sort[1];
+				fields = sort[0];
+				order = sort[1];
+				arrayListDao = articleDao.listSort(fields, numberofpages,
+						numberofpages * articleView.getCurrentPage(), order);
+				passing = "sorting";
 
-				arrayListDao = articleDao.listSort(fields, order);/*
-																 * return
-																 * arraylist by
-																 * limited
-																 * record
-																 */
+				if (passing.equals("searching") && order.equals("desc")) {
+					new clsSort().sort(arrayListDao, fields, false);
+				} else {
+					new clsSort().sort(arrayListDao, fields, true);
+				}
+
+				if (passing.equals("home") && order.equals("desc")) {
+					new clsSort().sort(arrayListDao, fields, false);
+				} else {
+					new clsSort().sort(arrayListDao, fields, true);
+				}
 
 				break;
-			/*
-			 * operation goto Homepage
-			 */
-			case "h":				
-				arrayListDao = articleDao.setRow(5, 0); /* set limited record for display */
+			case "h":
+				arrayListDao = articleDao.setRow(numberofpages, 0);
+				totalRecord = articleDao.returnCountRow();
+				articleView.setTotalRecord(totalRecord);
+				articleView.setArticles(arrayListDao);
+
+				articleView.gotoFirstPage();
+
+				arrayListDao = articleDao.setRow(articleView.getPageSize(), 0);
+				passing = "home";
 
 				break;
-			/*
-			 * operation viewDetails
-			 * 
-			 * */
 			case "v":
 				articleView.viewDetail(articleDao.searchRecord("id",
 						String.valueOf(articleView.viewOneRecord())).get(0));
 				articleView.setArticles(arrayListDao);
-				articleView
-						.getStringKeyboard("Press anykey for Back to home page : ");
+				UtilView.getStringKeyboard("Press anykey for Back to home page : ");
 				break;
 			case "#":
 				numberofpages = articleView.setPageSize();
@@ -244,45 +171,139 @@ public class ArticleController {
 				break;
 
 			case "n":
-
-				articleView.gotoNextPage();
-				arrayListDao = articleDao.setRow(numberofpages, numberofpages
-						* articleView.getCurrentPage());
+				if (passing.equalsIgnoreCase("searching")) {
+					arrayListDao = articleDao.searchRecord(field, key,
+							numberofpages,
+							numberofpages * articleView.getCurrentPage());
+					articleView.setTotalRecord(totalRecord);
+					articleView.setArticles(arrayListDao);
+					articleView.gotoNextPage();
+				} else if (passing.equalsIgnoreCase("home")) {
+					articleView.gotoNextPage();
+					arrayListDao = articleDao.setRow(numberofpages,
+							numberofpages * articleView.getCurrentPage());
+				} else if (passing.equalsIgnoreCase("sorting")) {
+					articleView.gotoNextPage();
+					arrayListDao = articleDao
+							.listSort(fields, numberofpages, numberofpages
+									* articleView.getCurrentPage(), order);
+				} else {
+					message = "Next Page Error!";
+				}
 				break;
 			case "p":
-				articleView.gotoPreviousPage();
-				arrayListDao = articleDao.setRow(numberofpages, numberofpages
-						* articleView.getCurrentPage());
+				if (passing.equalsIgnoreCase("searching")) {
+					arrayListDao = articleDao.searchRecord(field, key,
+							numberofpages,
+							numberofpages * articleView.getCurrentPage());
+					articleView.setTotalRecord(totalRecord);
+					articleView.setArticles(arrayListDao);
+					articleView.gotoPreviousPage();
+				} else if (passing.equalsIgnoreCase("home")) {
+					articleView.gotoPreviousPage();
+					arrayListDao = articleDao.setRow(numberofpages,
+							numberofpages * articleView.getCurrentPage());
+				} else if (passing.equalsIgnoreCase("sorting")) {
+					articleView.gotoPreviousPage();
+					arrayListDao = articleDao
+							.listSort(fields, numberofpages, numberofpages
+									* articleView.getCurrentPage(), order);
+				} else {
+					message = "Previous Page Error!";
+				}
 				break;
 			case "f":
-				articleView.gotoFirstPage();
-
-				arrayListDao = articleDao.setRow(numberofpages, numberofpages
-						* articleView.getCurrentPage());
+				if (passing.equalsIgnoreCase("searching")) {
+					arrayListDao = articleDao.searchRecord(field, key,
+							numberofpages,
+							numberofpages * articleView.getCurrentPage());
+					articleView.setTotalRecord(totalRecord);
+					articleView.setArticles(arrayListDao);
+					articleView.gotoFirstPage();
+				} else if (passing.equalsIgnoreCase("home")) {
+					articleView.gotoFirstPage();
+					arrayListDao = articleDao.setRow(numberofpages,
+							numberofpages * articleView.getCurrentPage());
+				} else if (passing.equalsIgnoreCase("sorting")) {
+					articleView.gotoFirstPage();
+					arrayListDao = articleDao
+							.listSort(fields, numberofpages, numberofpages
+									* articleView.getCurrentPage(), order);
+				} else {
+					message = "First Page Error!";
+				}
 				break;
 			case "l":
-				articleView.gotoLastPage();
-				arrayListDao = articleDao.setRow(numberofpages, numberofpages
-						* articleView.getCurrentPage());
+				if (passing.equalsIgnoreCase("searching")) {
+					arrayListDao = articleDao.searchRecord(field, key,
+							numberofpages,
+							numberofpages * articleView.getCurrentPage());
+					articleView.setTotalRecord(totalRecord);
+					articleView.setArticles(arrayListDao);
+					articleView.gotoLastPage();
+				} else if (passing.equalsIgnoreCase("home")) {
+					articleView.gotoLastPage();
+					arrayListDao = articleDao.setRow(numberofpages,
+							numberofpages * articleView.getCurrentPage());
+				} else if (passing.equalsIgnoreCase("sorting")) {
+					articleView.gotoLastPage();
+					arrayListDao = articleDao
+							.listSort(fields, numberofpages, numberofpages
+									* articleView.getCurrentPage(), order);
+				} else {
+					message = "Last Page Error!";
+				}
 				break;
 			case "g":
-				articleView.gotoPage();
-				arrayListDao = articleDao.setRow(numberofpages, numberofpages
-						* articleView.getCurrentPage());
+				if (passing.equalsIgnoreCase("searching")) {
+					arrayListDao = articleDao.searchRecord(field, key,
+							numberofpages,
+							numberofpages * articleView.getCurrentPage());
+					articleView.setTotalRecord(totalRecord);
+					articleView.setArticles(arrayListDao);
+					articleView.gotoPage();
+				} else if (passing.equalsIgnoreCase("home")) {
+					articleView.gotoPage();
+					arrayListDao = articleDao.setRow(numberofpages,
+							numberofpages * articleView.getCurrentPage());
+				} else if (passing.equalsIgnoreCase("sorting")) {
+					articleView.gotoPage();
+					arrayListDao = articleDao
+							.listSort(fields, numberofpages, numberofpages
+									* articleView.getCurrentPage(), order);
+				} else {
+					message = "Goto Page Error!";
+				}
 				break;
 			case "he":
-				articleView.helpOption(help());
+				articleView.alertMessage(readFile("help option.txt"));
+				articleView.waiting();
+				break;
+			case "ab":
+				articleView.alertMessage(readFile("aboutus.txt"));
 				articleView.waiting();
 				break;
 			case "e":
 				articleView.alertMessage("System Exited ...");
 				System.exit(0);
 				break;
+			/*
+			 * case "b": // backup database; articleView
+			 * .setMessageTable("Database Backup Succesfully to File \"" +
+			 * DatabaseConnection.backUpDatabase() + "\""); break;
+			 */
+			/*
+			 * case "re": // restore database; String fileName = UtilView
+			 * .getStringKeyboard("Input File Name: "); if
+			 * (DatabaseConnection.restoreDatabase(fileName)) articleView
+			 * .setMessageTable("Restore Database Succesfully from File \"" +
+			 * fileName + "\""); else articleView.setMessageTable("Error");
+			 * break;
+			 */
 			}// End of switch();
 			articleView.setArticles(arrayListDao);
 			articleView.setTotalRecord(totalRecord);
 			start();
-
 		} catch (ClassNotFoundException classnotexp) {
 			Controller.Logger.getLogger().writeLogException(classnotexp,
 					operation, "Controller");
@@ -339,7 +360,7 @@ public class ArticleController {
 		boolean passwordconfirm;
 		try {
 			failaccess++;
-			DatabaseConnection.checkDatabase();
+			DatabaseConnection.createDatabase("dbarticlebtb.sql");
 			if (failaccess == 4) {
 				System.exit(1);
 			} else {
@@ -350,21 +371,21 @@ public class ArticleController {
 							.viewLoginPassword());
 					if (passwordconfirm) {
 						Controller.Logger.getLogger().writeLogOpenDatabase(
-								DatabaseConnection.getDatabaseName());
+								DatabaseConnection.getDB_NAME());
 						arrayListDao = articleDao.setRow(numberofpages, 0);
-						int totalRecord = articleDao.returnCountRow(); // number
-																		// of
-																		// elements
-																		// of
-																		// arraylist
+						totalRecord = articleDao.returnCountRow(); // number
+																	// of
+																	// elements
+																	// of
+																	// arraylist
 						articleView.setTotalRecord(totalRecord);
 						articleView.setArticles(arrayListDao);
-
+						setPassing("home");
 						controllerAction(articleView.process());
 					}
 				} else {
 					articleView.alertMessage("Invalid Username or Email !!!");
-					String did = articleView
+					String did = UtilView
 							.getStringKeyboard("Press E)xit, T)ry again... ");
 					if (did.compareToIgnoreCase("y") == 1) {
 						startDefualt();
@@ -395,8 +416,8 @@ public class ArticleController {
 	}
 
 	/* Sarin read hepl option from txtfile help option.txt */
-	public String help() throws IOException {
-		FileInputStream fis = new FileInputStream("help option.txt");
+	public String readFile(String fileName) throws IOException {
+		FileInputStream fis = new FileInputStream(fileName);
 		// Construct BufferedReader from InputStreamReader
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 		String line = "";
@@ -408,7 +429,8 @@ public class ArticleController {
 		return geth;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ClassNotFoundException,
+			SQLException {
 		System.gc();
 		new ArticleController().startDefualt();
 
