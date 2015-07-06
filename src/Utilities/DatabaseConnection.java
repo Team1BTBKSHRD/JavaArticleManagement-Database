@@ -150,6 +150,7 @@ public class DatabaseConnection {
 	
 	public static boolean restoreDatabase(String fileName) {
 		File pathToRestore = new File("backup/" + fileName);
+		System.out.println(pathToRestore.getAbsolutePath());
 		if(pathToRestore.exists()){
 			try {
 				resetDatabase();				
@@ -173,14 +174,16 @@ public class DatabaseConnection {
 		return false;
 	}
 	
-//	public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
-////		  System.out.println(backUpDatabase());
-//		 System.out.println(createDatabase("default.sql"));		
-//		 //System.out.println(restoreDatabaseDefinition("05072015205932.sql"));
-//		//System.out.println(restoreDatabase("default.sql"));
-//		//System.out.println(createDatabase("default.sql"));
-//		//System.out.println(resetDatabase());
-//	}	
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
+//		  System.out.println(backUpDatabase());
+		System.out.println(checkDatabase());
+		
+		 System.out.println(createDatabase("dbarticlebtb.sql"));		
+		 //System.out.println(restoreDatabaseDefinition("05072015205932.sql"));
+		//System.out.println(restoreDatabase("default.sql"));
+		//System.out.println(createDatabase("default.sql"));
+		//System.out.println(resetDatabase());
+	}	
 	
 	//###########################################setter&getter#######################################
 	public static String getDRIVER_NAME() {
